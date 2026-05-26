@@ -1,0 +1,517 @@
+import { useEffect, useState, useRef } from 'react';
+import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
+import { Link } from 'react-router';
+import { Play, Pause, SkipForward, SkipBack, Music, Palette, TrendingUp, Calendar, ArrowRight, Heart, Phone, Send, Mail, MapPin, Briefcase } from 'lucide-react';
+import { toast } from 'sonner';
+
+const services = [
+  {
+    icon: Music,
+    title: 'Music',
+    desc: 'Creating inspirational and soulful music that resonates with hearts across the globe. From Daily Miracles to Philistine.',
+    link: '/music',
+  },
+  {
+    icon: Palette,
+    title: 'Fashion Design',
+    desc: 'TheSucceedeer Designs — crafting exquisite male & female suits, traditional Agbada, and contemporary African styles.',
+    link: '/about',
+  },
+  {
+    icon: TrendingUp,
+    title: 'Digital Marketing',
+    desc: 'Expert in Facebook Ads, DMI, optimization, and growth strategies for brands looking to scale their digital presence.',
+    link: '/blog',
+  },
+  {
+    icon: Calendar,
+    title: 'Events & Booking',
+    desc: 'Available for performances, speaking engagements, fashion shows, and digital marketing consultations worldwide.',
+    link: '/events',
+  },
+];
+
+const musicTracks = [
+  { id: 1, title: 'Daily Miracles', cover: '/images/album-daily-miracles.jpg' },
+  { id: 2, title: 'Philistine', cover: '/images/album-philistine.jpg' },
+  { id: 3, title: 'Rise Up', cover: '/images/album-daily-miracles.jpg' },
+];
+
+const events = [
+  {
+    day: '15',
+    month: 'JUN',
+    title: 'Daily Miracles Album Launch',
+    desc: 'Join us for an unforgettable night of music, worship, and celebration.',
+    location: 'Lagos, Nigeria',
+    time: '6:00 PM',
+  },
+  {
+    day: '22',
+    month: 'JUL',
+    title: 'TheSucceedeer Fashion Showcase',
+    desc: 'Exclusive runway show featuring bespoke suits, agbada, and African wear.',
+    location: 'Abuja, Nigeria',
+    time: '4:00 PM',
+  },
+  {
+    day: '10',
+    month: 'AUG',
+    title: 'Digital Marketing Masterclass',
+    desc: 'Learn advanced Facebook Ads strategies and conversion optimization.',
+    location: 'Online (Zoom)',
+    time: '2:00 PM',
+  },
+  {
+    day: '05',
+    month: 'SEP',
+    title: 'Philistine Live Concert',
+    desc: 'Experience the power of Philistine live! An evening of victory and praise.',
+    location: 'Port Harcourt',
+    time: '5:00 PM',
+  },
+];
+
+const blogPosts = [
+  {
+    image: '/images/album-daily-miracles.jpg',
+    tag: 'Music',
+    title: 'The Story Behind Daily Miracles',
+    excerpt: 'How a moment of prayer in Lagos traffic inspired one of my most powerful songs yet.',
+    link: '/blog',
+  },
+  {
+    image: '/images/blog-fashion.jpg',
+    tag: 'Fashion',
+    title: 'Agbada: The Royal Attire Reimagined',
+    excerpt: 'How modern fashion designers are transforming traditional Agbada into contemporary statements.',
+    link: '/blog',
+  },
+  {
+    image: '/images/marketing-workspace.jpg',
+    tag: 'Marketing',
+    title: 'Facebook Ads in 2026: What Is Working Now',
+    excerpt: 'Latest strategies and creative approaches driving 5x ROAS for our clients right now.',
+    link: '/blog',
+  },
+];
+
+export default function Home() {
+  const [currentTrack, setCurrentTrack] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (isPlaying) {
+      intervalRef.current = setInterval(() => {
+        setProgress((prev) => {
+          if (prev >= 100) {
+            handleNext();
+            return 0;
+          }
+          return prev + 0.5;
+        });
+      }, 100);
+    } else {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    }
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [isPlaying]);
+
+  const handleNext = () => {
+    setCurrentTrack((prev) => (prev + 1) % musicTracks.length);
+    setProgress(0);
+  };
+
+  const handlePrev = () => {
+    setCurrentTrack((prev) => (prev - 1 + musicTracks.length) % musicTracks.length);
+    setProgress(0);
+  };
+
+  const handleContactSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    toast.success('Thank you for reaching out! Succeed will get back to you within 24 hours.');
+    (e.target as HTMLFormElement).reset();
+  };
+
+  return (
+    <div className="min-h-screen">
+      <Navbar />
+
+      {/* Hero Section */}
+      <section className="min-h-screen flex items-center bg-gradient-to-br from-[#f0fdfa] via-[#ccfbf1] to-[#99f6e4] relative overflow-hidden pt-20">
+        <div className="absolute w-[600px] h-[600px] bg-[rgba(13,148,136,0.08)] rounded-full -top-[200px] -right-[100px] animate-pulse" style={{ animationDuration: '6s' }} />
+        <div className="absolute w-[400px] h-[400px] bg-[rgba(6,182,212,0.06)] rounded-full -bottom-[100px] -left-[100px] animate-pulse" style={{ animationDuration: '8s', animationDirection: 'reverse' }} />
+        <div className="max-w-[1400px] mx-auto px-6 py-12 grid lg:grid-cols-2 gap-12 items-center relative z-10">
+          <div>
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-[#0f172a] leading-tight mb-6">
+              Exceptional Talent,<br /><span className="text-[#0d9488]">Every Time</span>
+            </h1>
+            <p className="text-[#64748b] text-lg leading-relaxed mb-8 max-w-lg">
+              Succeed Michael Lawani is a multi-talented creative force — a passionate musician, innovative fashion designer behind TheSucceedeer Designs, and a results-driven digital marketing expert.
+            </p>
+            <div className="flex flex-wrap gap-4 mb-10">
+              <Link to="/music" className="inline-flex items-center gap-2 bg-[#0d9488] text-white px-6 py-3.5 rounded-full font-semibold hover:bg-[#0f766e] hover:-translate-y-0.5 transition-all shadow-[0_4px_20px_rgba(13,148,136,0.3)]">
+                <Play size={18} /> Listen Now
+              </Link>
+              <Link to="/contact" className="inline-flex items-center gap-2 bg-white text-[#0f172a] px-6 py-3.5 rounded-full font-semibold border-2 border-gray-200 hover:border-[#0d9488] hover:text-[#0d9488] hover:-translate-y-0.5 transition-all">
+                <Heart size={18} /> Get In Touch
+              </Link>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="flex -space-x-3">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="w-10 h-10 rounded-full border-3 border-white bg-[#0d9488] flex items-center justify-center text-white text-xs font-bold">
+                    {i === 1 ? 'SM' : i === 2 ? 'TL' : 'JD'}
+                  </div>
+                ))}
+              </div>
+              <div className="text-sm">
+                <span className="font-bold text-[#0f172a]">50K+</span>{' '}
+                <span className="text-[#64748b]">Fans Worldwide</span>
+              </div>
+            </div>
+          </div>
+          <div className="flex justify-center relative">
+            <img
+              src="/images/hero-portrait.jpg"
+              alt="Succeed Michael Lawani"
+              className="w-full max-w-md rounded-3xl shadow-2xl object-cover"
+            />
+            {/* Floating cards */}
+            <div className="absolute top-[10%] -left-4 bg-white rounded-2xl p-4 shadow-xl max-w-[180px] animate-bounce" style={{ animationDuration: '4s' }}>
+              <h4 className="text-sm font-bold text-[#0f172a] mb-1">Latest Release</h4>
+              <p className="text-xs text-[#64748b]">Daily Miracles out now!</p>
+              <div className="flex -space-x-2 mt-2">
+                {musicTracks.map((t, i) => (
+                  <img key={i} src={t.cover} alt="" className="w-8 h-8 rounded-full border-2 border-white object-cover" />
+                ))}
+              </div>
+            </div>
+            <div className="absolute bottom-[15%] -right-4 bg-white rounded-2xl p-4 shadow-xl flex items-center gap-3 animate-bounce" style={{ animationDuration: '5s', animationDelay: '1s' }}>
+              <div className="w-10 h-10 bg-[#0d9488] rounded-xl flex items-center justify-center text-white">
+                <Phone size={18} />
+              </div>
+              <div>
+                <h4 className="text-sm font-bold">Book a Call</h4>
+                <p className="text-xs text-[#64748b]">+234 813 478 1588</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Services Section */}
+      <section className="py-20 bg-[#0d9488] relative overflow-hidden">
+        <div className="absolute w-[300px] h-[300px] bg-white/5 rounded-full -top-[100px] -left-[100px]" />
+        <div className="max-w-[1400px] mx-auto px-6 relative z-10">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Easily Explore My World</h2>
+            <p className="text-white/80 max-w-xl mx-auto">
+              From soul-stirring music to bespoke fashion and cutting-edge digital marketing — discover the many dimensions of Succeed Michael Lawani.
+            </p>
+          </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {services.map((service, i) => (
+              <Link
+                key={service.title}
+                to={service.link}
+                className={`rounded-2xl p-6 transition-all duration-400 hover:-translate-y-2 group ${
+                  i === 1 ? 'bg-white text-[#0f172a]' : 'bg-white/10 backdrop-blur border border-white/20 hover:bg-white/20'
+                }`}
+              >
+                <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 mx-auto ${
+                  i === 1 ? 'bg-[#0d9488] text-white' : 'bg-white/20 text-white'
+                }`}>
+                  <service.icon size={28} />
+                </div>
+                <h3 className={`text-lg font-bold text-center mb-2 ${i === 1 ? 'text-[#0f172a]' : 'text-white'}`}>
+                  {service.title}
+                </h3>
+                <p className={`text-sm text-center leading-relaxed ${i === 1 ? 'text-[#64748b]' : 'text-white/80'}`}>
+                  {service.desc}
+                </p>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Music Section */}
+      <section className="py-20 bg-[#f8fafc]">
+        <div className="max-w-[1400px] mx-auto px-6">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-[#0f172a] mb-4">
+              My <span className="text-[#0d9488]">Music</span>
+            </h2>
+            <p className="text-[#64748b]">Stream and download my latest tracks. Experience the sound of inspiration.</p>
+          </div>
+          <div className="grid md:grid-cols-3 gap-8">
+            {musicTracks.map((track, index) => (
+              <div key={track.id} className="bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2 group">
+                <div className="relative overflow-hidden h-72">
+                  <img src={track.cover} alt={track.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  <div className="absolute inset-0 bg-[#0d9488]/70 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                      onClick={() => { setCurrentTrack(index); setIsPlaying(true); setProgress(0); }}
+                      className="w-16 h-16 bg-white rounded-full flex items-center justify-center text-[#0d9488] hover:scale-110 transition-transform"
+                    >
+                      <Play size={24} className="ml-1" />
+                    </button>
+                  </div>
+                </div>
+                <div className="p-6">
+                  <h3 className="text-xl font-bold text-[#0f172a] mb-2">{track.title}</h3>
+                  <p className="text-[#64748b] text-sm mb-4">
+                    {index === 0 ? 'An uplifting anthem of faith and gratitude.' : index === 1 ? 'A powerful declaration of victory over every giant.' : 'The debut EP that started it all. Inspiring and soulful.'}
+                  </p>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => { setCurrentTrack(index); setIsPlaying(true); setProgress(0); }}
+                      className="flex-1 bg-[#0d9488] text-white py-2.5 rounded-xl font-semibold text-sm hover:bg-[#0f766e] transition-colors flex items-center justify-center gap-1"
+                    >
+                      <Play size={14} /> Listen
+                    </button>
+                    <button className="flex-1 bg-[#f8fafc] text-[#0f172a] py-2.5 rounded-xl font-semibold text-sm border-2 border-gray-200 hover:border-[#0d9488] hover:text-[#0d9488] transition-colors flex items-center justify-center gap-1">
+                      Download
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="text-center mt-10">
+            <Link to="/music" className="inline-flex items-center gap-2 text-[#0d9488] font-semibold hover:gap-3 transition-all">
+              View Full Discography <ArrowRight size={18} />
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Fashion & Marketing Showcase */}
+      <section className="py-20 bg-white">
+        <div className="max-w-[1400px] mx-auto px-6">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div>
+              <h2 className="text-3xl md:text-4xl font-bold text-[#0f172a] mb-4">
+                TheSucceedeer <span className="text-[#0d9488]">Designs</span>
+              </h2>
+              <p className="text-[#64748b] leading-relaxed mb-6">
+                Premium fashion for the modern individual. From bespoke male and female suits to traditional Agbada and contemporary African styles — every piece is crafted with precision, passion, and an unwavering commitment to excellence.
+              </p>
+              <div className="flex flex-wrap gap-3 mb-8">
+                {['Custom Fitting', 'Premium Fabrics', 'Worldwide Shipping', 'Express Delivery'].map((tag) => (
+                  <span key={tag} className="bg-[#f8fafc] text-[#0d9488] px-4 py-2 rounded-full text-sm font-medium border border-gray-100">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+              <Link to="/about" className="inline-flex items-center gap-2 bg-[#0d9488] text-white px-6 py-3 rounded-full font-semibold hover:bg-[#0f766e] transition-colors">
+                Explore Fashion <ArrowRight size={18} />
+              </Link>
+            </div>
+            <div className="relative">
+              <img src="/images/fashion-show.jpg" alt="Fashion Show" className="rounded-3xl shadow-2xl w-full object-cover" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Digital Marketing */}
+      <section className="py-20 bg-gradient-to-br from-[#0f172a] to-[#1e293b] text-white">
+        <div className="max-w-[1400px] mx-auto px-6">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div className="order-2 lg:order-1 relative">
+              <img src="/images/marketing-workspace.jpg" alt="Digital Marketing" className="rounded-3xl shadow-2xl w-full" />
+              <div className="absolute top-4 -right-4 w-14 h-14 bg-[#0d9488] rounded-2xl flex items-center justify-center text-white text-xl animate-bounce" style={{ animationDuration: '3s' }}>+</div>
+              <div className="absolute bottom-8 -left-4 w-14 h-14 bg-[#0d9488] rounded-2xl flex items-center justify-center text-white text-xl animate-bounce" style={{ animationDuration: '4s', animationDelay: '1s' }}>+</div>
+            </div>
+            <div className="order-1 lg:order-2">
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                Digital Marketing <span className="text-[#14b8a6]">Expert</span>
+              </h2>
+              <p className="text-white/70 leading-relaxed mb-8">
+                Transform your brand's digital presence with data-driven strategies. As a certified digital marketing professional, I specialize in Facebook Ads, DMI, conversion optimization, and scaling businesses to 7 figures.
+              </p>
+              <div className="grid grid-cols-2 gap-4 mb-8">
+                {[
+                  { value: '500+', label: 'Campaigns Managed' },
+                  { value: '98%', label: 'Client Satisfaction' },
+                  { value: '10M+', label: 'Ad Spend Managed' },
+                  { value: '50+', label: 'Brands Scaled' },
+                ].map((stat) => (
+                  <div key={stat.label} className="bg-white/5 border border-white/10 rounded-2xl p-4 text-center">
+                    <div className="text-2xl font-bold text-[#14b8a6] mb-1">{stat.value}</div>
+                    <div className="text-white/60 text-sm">{stat.label}</div>
+                  </div>
+                ))}
+              </div>
+              <Link to="/blog" className="inline-flex items-center gap-2 bg-[#0d9488] text-white px-6 py-3 rounded-full font-semibold hover:bg-[#0f766e] transition-colors">
+                Read Marketing Tips <ArrowRight size={18} />
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Events Section */}
+      <section className="py-20 bg-[#f8fafc]">
+        <div className="max-w-[1400px] mx-auto px-6">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-[#0f172a] mb-4">
+              Upcoming <span className="text-[#0d9488]">Events</span>
+            </h2>
+            <p className="text-[#64748b]">Join me at these exclusive events. Performances, fashion shows, and masterclasses.</p>
+          </div>
+          <div className="grid md:grid-cols-2 gap-6">
+            {events.map((event) => (
+              <div key={event.title} className="bg-white rounded-3xl overflow-hidden flex shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 group">
+                <div className="bg-[#0d9488] text-white p-6 flex flex-col items-center justify-center min-w-[100px]">
+                  <div className="text-3xl font-extrabold leading-none">{event.day}</div>
+                  <div className="text-xs uppercase tracking-wider mt-1 opacity-80">{event.month}</div>
+                </div>
+                <div className="p-6 flex-1">
+                  <h3 className="text-lg font-bold text-[#0f172a] mb-2 group-hover:text-[#0d9488] transition-colors">{event.title}</h3>
+                  <p className="text-[#64748b] text-sm mb-3">{event.desc}</p>
+                  <div className="flex flex-wrap gap-4 text-xs text-[#64748b]">
+                    <span className="flex items-center gap-1"><MapPin size={12} className="text-[#0d9488]" /> {event.location}</span>
+                    <span className="flex items-center gap-1"><Calendar size={12} className="text-[#0d9488]" /> {event.time}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="text-center mt-10">
+            <Link to="/events" className="inline-flex items-center gap-2 text-[#0d9488] font-semibold hover:gap-3 transition-all">
+              View All Events <ArrowRight size={18} />
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Blog Section */}
+      <section className="py-20 bg-white">
+        <div className="max-w-[1400px] mx-auto px-6">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-[#0f172a] mb-4">
+              Latest <span className="text-[#0d9488]">Blog</span>
+            </h2>
+            <p className="text-[#64748b]">Insights on music, fashion, digital marketing, and personal growth.</p>
+          </div>
+          <div className="grid md:grid-cols-3 gap-8">
+            {blogPosts.map((post) => (
+              <Link key={post.title} to={post.link} className="bg-[#f8fafc] rounded-3xl overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-2 group block">
+                <div className="h-56 overflow-hidden">
+                  <img src={post.image} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                </div>
+                <div className="p-6">
+                  <span className="inline-block bg-[#0d9488] text-white text-xs font-bold px-3 py-1 rounded-full mb-3">{post.tag}</span>
+                  <h3 className="text-lg font-bold text-[#0f172a] mb-2 group-hover:text-[#0d9488] transition-colors">{post.title}</h3>
+                  <p className="text-[#64748b] text-sm leading-relaxed mb-4">{post.excerpt}</p>
+                  <span className="text-[#0d9488] text-sm font-semibold flex items-center gap-1 group-hover:gap-2 transition-all">
+                    Read More <ArrowRight size={14} />
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Contact Section */}
+      <section className="py-20 bg-gradient-to-br from-[#f0fdfa] to-[#ccfbf1]">
+        <div className="max-w-[1400px] mx-auto px-6">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div>
+              <h2 className="text-3xl md:text-4xl font-bold text-[#0f172a] mb-4">
+                Get In <span className="text-[#0d9488]">Touch</span>
+              </h2>
+              <p className="text-[#64748b] leading-relaxed mb-8">
+                Ready to collaborate? Whether it is music production, bespoke fashion, or digital marketing strategy — let us create something extraordinary together.
+              </p>
+              <div className="space-y-4 mb-8">
+                {[
+                  { icon: Phone, label: 'Phone', value: '+234 813 478 1588' },
+                  { icon: Mail, label: 'Email', value: 'hello@succeedlawani.com' },
+                  { icon: MapPin, label: 'Location', value: 'Lagos, Nigeria' },
+                  { icon: Briefcase, label: 'Business', value: 'TheSucceedeer Designs & Digital Agency' },
+                ].map((item) => (
+                  <div key={item.label} className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-[#0d9488] rounded-xl flex items-center justify-center text-white">
+                      <item.icon size={20} />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-[#0f172a] text-sm">{item.label}</h4>
+                      <p className="text-[#64748b] text-sm">{item.value}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="bg-white rounded-3xl p-8 shadow-xl">
+              <form onSubmit={handleContactSubmit} className="space-y-5">
+                <div>
+                  <label className="block text-sm font-semibold text-[#0f172a] mb-2">Your Name</label>
+                  <input type="text" required placeholder="Enter your name" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#0d9488] focus:outline-none focus:ring-4 focus:ring-[#0d9488]/10 transition-all" />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-[#0f172a] mb-2">Email Address</label>
+                  <input type="email" required placeholder="Enter your email" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#0d9488] focus:outline-none focus:ring-4 focus:ring-[#0d9488]/10 transition-all" />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-[#0f172a] mb-2">Subject</label>
+                  <input type="text" required placeholder="Music / Fashion / Marketing / Other" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#0d9488] focus:outline-none focus:ring-4 focus:ring-[#0d9488]/10 transition-all" />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-[#0f172a] mb-2">Message</label>
+                  <textarea required rows={4} placeholder="Tell me about your project..." className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#0d9488] focus:outline-none focus:ring-4 focus:ring-[#0d9488]/10 transition-all resize-none" />
+                </div>
+                <button type="submit" className="w-full bg-[#0d9488] text-white py-3 rounded-xl font-semibold hover:bg-[#0f766e] transition-all hover:-translate-y-0.5 hover:shadow-lg flex items-center justify-center gap-2">
+                  <Send size={18} /> Send Message
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Audio Player */}
+      {isPlaying && (
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-2xl z-50 p-4">
+          <div className="max-w-[1400px] mx-auto flex items-center gap-4">
+            <img src={musicTracks[currentTrack].cover} alt="" className="w-12 h-12 rounded-lg object-cover" />
+            <div className="flex-1 min-w-0">
+              <h4 className="font-semibold text-[#0f172a] text-sm truncate">{musicTracks[currentTrack].title}</h4>
+              <p className="text-[#64748b] text-xs">Succeed Michael Lawani</p>
+              <div className="w-full h-1 bg-gray-200 rounded-full mt-2">
+                <div className="h-full bg-[#0d9488] rounded-full transition-all duration-100" style={{ width: `${progress}%` }} />
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <button onClick={handlePrev} className="text-[#0f172a] hover:text-[#0d9488] transition-colors"><SkipBack size={20} /></button>
+              <button onClick={() => setIsPlaying(false)} className="w-10 h-10 bg-[#0d9488] text-white rounded-full flex items-center justify-center hover:bg-[#0f766e] transition-colors">
+                <Pause size={18} />
+              </button>
+              <button onClick={handleNext} className="text-[#0f172a] hover:text-[#0d9488] transition-colors"><SkipForward size={20} /></button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <Footer />
+    </div>
+  );
+}
+
+
