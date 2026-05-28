@@ -87,6 +87,19 @@ export const api = {
     if (!res.ok) throw new Error(data.error || 'Upload failed');
     return data.url as string;
   },
+  uploadAudio: async (file: File): Promise<string> => {
+    const token = getToken();
+    const form = new FormData();
+    form.append('audio', file);
+    const res = await fetch(`${BASE}/upload`, {
+      method: 'POST',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: form,
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Upload failed');
+    return data.url as string;
+  },
 
   // Public — no auth required
   getPublicPosts: (params?: Record<string, string>) => {

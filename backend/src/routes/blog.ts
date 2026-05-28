@@ -4,7 +4,7 @@ import { requireAuth } from '../middleware/auth';
 
 const router = Router();
 
-// Tags are stored as comma-separated string in MySQL; these helpers convert to/from array
+// Comma-separated string helpers for tags and images
 function parseTags(raw: string): string[] {
   return raw ? raw.split(',').map((t) => t.trim()).filter(Boolean) : [];
 }
@@ -13,9 +13,19 @@ function serializeTags(tags: unknown): string {
   if (typeof tags === 'string') return tags;
   return '';
 }
-function withParsedTags<T extends { tags: string }>(post: T): Omit<T, 'tags'> & { tags: string[] } {
-  return { ...post, tags: parseTags(post.tags) };
+function parseImages(raw: string): string[] {
+  return raw ? raw.split(',').map((u) => u.trim()).filter(Boolean) : [];
 }
+function serializeImages(images: unknown): string {
+  if (Array.isArray(images)) return images.join(',');
+  if (typeof images === 'string') return images;
+  return '';
+}
+function withParsedPost<T extends { tags: string; images: string }>(post: T): Omit<T, 'tags' | 'images'> & { tags: string[]; images: string[] } {
+  return { ...post, tags: parseTags(post.tags), images: parseImages(post.images) };
+}
+// Keep backward compat alias
+const withParsedTags = withParsedPost;
 
 // --- PUBLIC ---
 router.get('/', async (req: Request, res: Response) => {
@@ -53,17 +63,18 @@ router.post('/:id/view', async (req: Request, res: Response) => {
 
 // --- ADMIN ---
 router.post('/', requireAuth, async (req: Request, res: Response) => {
-  const { tags, ...rest } = req.body;
-  const post = await prisma.blogPost.create({ data: { ...rest, tags: serializeTags(tags) } });
-  res.status(201).json(withParsedTags(post));
+  const { tags, images, ...rest } = req.body;
+  const post = await prisma.blogPost.create({ data: { ...rest, tags: serializeTags(tags), images: serializeImages(images) } });
+  res.status(201).json(withParsedPost(post));
 });
 
 router.patch('/:id', requireAuth, async (req: Request, res: Response) => {
-  const { tags, ...rest } = req.body;
+  const { tags, images, ...rest } = req.body;
   const data: Record<string, unknown> = { ...rest };
   if (tags !== undefined) data.tags = serializeTags(tags);
+  if (images !== undefined) data.images = serializeImages(images);
   const post = await prisma.blogPost.update({ where: { id: Number(req.params.id) }, data });
-  res.json(withParsedTags(post));
+  res.json(withParsedPost(post));
 });
 
 router.delete('/:id', requireAuth, async (req: Request, res: Response) => {

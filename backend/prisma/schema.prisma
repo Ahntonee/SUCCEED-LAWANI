@@ -92,6 +92,7 @@ model BlogPost {
   date      String
   readTime  String
   tags      String   @default("")
+  images    String   @default("")
   featured  Boolean  @default(false)
   status    String   @default("published")
   viewCount Int      @default(0)

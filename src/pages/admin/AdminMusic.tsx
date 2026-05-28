@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Plus, Edit2, Trash2, Star, Music, Disc3, ExternalLink, X, Check } from 'lucide-react';
 import { api } from '../../lib/api';
 import ImageUpload from '../../components/ImageUpload';
+import AudioUpload from '../../components/AudioUpload';
 
 interface Track { id: number; title: string; album: string; duration: string; cover: string; audioUrl: string; featured: boolean; playCount: number; downloadCount: number; order: number; }
 interface Album { id: number; title: string; year: string; type: string; cover: string; trackCount: number; description: string; }
@@ -202,7 +203,6 @@ export default function AdminMusic() {
                 { label: 'Title', key: 'title', placeholder: 'e.g. Daily Miracles' },
                 { label: 'Album', key: 'album', placeholder: 'e.g. Daily Miracles' },
                 { label: 'Duration', key: 'duration', placeholder: 'e.g. 4:12' },
-                { label: 'Audio File URL', key: 'audioUrl', placeholder: 'https://cdn.example.com/track.mp3' },
               ].map((f) => (
                 <div key={f.key}>
                   <label className="block text-sm font-semibold text-[#0f172a] mb-1.5">{f.label}</label>
@@ -212,6 +212,11 @@ export default function AdminMusic() {
                     className="w-full px-4 py-2.5 rounded-xl border-2 border-gray-200 focus:border-[#0d9488] focus:outline-none text-sm transition-all" />
                 </div>
               ))}
+              <AudioUpload
+                label="Audio File"
+                value={trackModal.data.audioUrl || ''}
+                onChange={(url) => setTrackModal({ ...trackModal, data: { ...trackModal.data, audioUrl: url } })}
+              />
               <ImageUpload
                 label="Cover Image"
                 value={trackModal.data.cover || ''}
