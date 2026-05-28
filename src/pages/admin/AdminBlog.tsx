@@ -1,11 +1,11 @@
-import { useEffect, useState } from 'react';
-import { Plus, Edit2, Trash2, Star, Eye, X, Check } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { Plus, Edit2, Trash2, Star, Eye, X, Check, Images, Upload } from 'lucide-react';
 import { api } from '../../lib/api';
 import ImageUpload from '../../components/ImageUpload';
 
-interface Post { id: number; title: string; excerpt: string; content: string; image: string; category: string; date: string; readTime: string; tags: string[]; featured: boolean; status: string; viewCount: number; }
+interface Post { id: number; title: string; excerpt: string; content: string; image: string; images: string[]; category: string; date: string; readTime: string; tags: string[]; featured: boolean; status: string; viewCount: number; }
 
-const empty: Omit<Post, 'id' | 'viewCount'> = { title: '', excerpt: '', content: '', image: '', category: 'Music', date: '', readTime: '', tags: [], featured: false, status: 'published' };
+const empty: Omit<Post, 'id' | 'viewCount'> = { title: '', excerpt: '', content: '', image: '', images: [], category: 'Music', date: '', readTime: '', tags: [], featured: false, status: 'published' };
 const categories = ['Music', 'Fashion', 'Marketing', 'Lifestyle'];
 
 export default function AdminBlog() {
@@ -14,6 +14,8 @@ export default function AdminBlog() {
   const [tagInput, setTagInput] = useState('');
   const [saving, setSaving] = useState(false);
   const [filter, setFilter] = useState<'all' | 'published' | 'draft'>('all');
+  const [imgUploading, setImgUploading] = useState(false);
+  const imgInputRef = useRef<HTMLInputElement>(null);
 
   const load = () => { api.getBlogPosts().then(setPosts).catch(console.error); };
   useEffect(load, []);
@@ -47,6 +49,22 @@ export default function AdminBlog() {
   const removeTag = (i: number) => {
     const tags = (modal.data.tags || []).filter((_, idx) => idx !== i);
     setModal({ ...modal, data: { ...modal.data, tags } });
+  };
+
+  const addContentImage = async (file: File) => {
+    if (!file.type.startsWith('image/')) return;
+    setImgUploading(true);
+    try {
+      const url = await api.uploadImage(file);
+      const images = [...(modal.data.images || []), url];
+      setModal((prev) => ({ ...prev, data: { ...prev.data, images } }));
+    } catch (e) { alert((e as Error).message); }
+    finally { setImgUploading(false); }
+  };
+
+  const removeContentImage = (i: number) => {
+    const images = (modal.data.images || []).filter((_, idx) => idx !== i);
+    setModal({ ...modal, data: { ...modal.data, images } });
   };
 
   const catColors: Record<string, string> = {
@@ -196,6 +214,60 @@ export default function AdminBlog() {
                   <button onClick={addTag} className="px-4 py-2.5 bg-[#0d9488] text-white rounded-xl text-sm font-semibold hover:bg-[#0f766e]">Add</button>
                 </div>
               </div>
+              {/* Content Images (multiple) */}
+              <div>
+                <label className="block text-sm font-semibold text-[#0f172a] mb-2 flex items-center gap-2">
+                  <Images size={15} className="text-[#0d9488]" /> Content Images
+                  <span className="text-xs font-normal text-[#64748b]">— upload images to use inside your post</span>
+                </label>
+                {(modal.data.images || []).length > 0 && (
+                  <div className="grid grid-cols-3 gap-2 mb-3">
+                    {(modal.data.images || []).map((url, i) => (
+                      <div key={i} className="relative group rounded-xl overflow-hidden border border-gray-100 aspect-video bg-gray-50">
+                        <img src={url} alt="" className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-center justify-center">
+                          <button
+                            type="button"
+                            onClick={() => removeContentImage(i)}
+                            className="opacity-0 group-hover:opacity-100 bg-red-500 text-white rounded-full p-1 transition-all"
+                          >
+                            <X size={12} />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <div className="border-2 border-dashed border-gray-200 rounded-xl p-4 text-center hover:border-[#0d9488]/40 transition-colors">
+                  {imgUploading ? (
+                    <div className="flex items-center justify-center gap-2 text-sm text-[#64748b]">
+                      <div className="w-4 h-4 border-2 border-[#0d9488]/30 border-t-[#0d9488] rounded-full animate-spin" />
+                      Uploading...
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => imgInputRef.current?.click()}
+                      className="flex items-center gap-2 text-sm font-semibold text-[#0d9488] mx-auto hover:opacity-80 transition-opacity"
+                    >
+                      <Upload size={14} /> Add Image
+                    </button>
+                  )}
+                  <p className="text-xs text-gray-400 mt-1">Click to upload or drag & drop multiple images</p>
+                </div>
+                <input
+                  ref={imgInputRef}
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  className="hidden"
+                  onChange={(e) => {
+                    Array.from(e.target.files || []).forEach(addContentImage);
+                    e.target.value = '';
+                  }}
+                />
+              </div>
+
               <label className="flex items-center gap-3 cursor-pointer">
                 <div onClick={() => setModal({ ...modal, data: { ...modal.data, featured: !modal.data.featured } })}
                   className={`w-10 h-6 rounded-full transition-colors flex items-center px-1 ${modal.data.featured ? 'bg-[#0d9488]' : 'bg-gray-200'}`}>

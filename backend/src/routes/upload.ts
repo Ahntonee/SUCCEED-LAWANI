@@ -21,12 +21,12 @@ const storage = multer.diskStorage({
 
 const upload = multer({
   storage,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
+  limits: { fileSize: 50 * 1024 * 1024 }, // 50 MB (audio files can be large)
   fileFilter: (_req: Express.Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
-    if (file.mimetype.startsWith('image/')) {
+    if (file.mimetype.startsWith('image/') || file.mimetype.startsWith('audio/')) {
       cb(null, true);
     } else {
-      cb(new Error('Only image files are allowed'));
+      cb(new Error('Only image and audio files are allowed'));
     }
   },
 });
@@ -34,16 +34,17 @@ const upload = multer({
 router.post(
   '/',
   requireAuth,
-  upload.single('image'),
+  upload.any(),
   (req: Request, res: Response) => {
-    if (!req.file) {
+    const files = req.files as Express.Multer.File[];
+    const file = files?.[0];
+    if (!file) {
       res.status(400).json({ error: 'No file uploaded' });
       return;
     }
-    // Return the full URL so the browser can display it cross-origin (dev: port 4000, prod: same domain)
     const protocol = req.protocol;
     const host = req.get('host') || 'localhost:4000';
-    const url = `${protocol}://${host}/uploads/${req.file.filename}`;
+    const url = `${protocol}://${host}/uploads/${file.filename}`;
     res.json({ url });
   }
 );
