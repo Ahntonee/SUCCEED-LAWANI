@@ -1,0 +1,139 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Admin {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  name      String   @default("Succeed Michael Lawani")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Track {
+  id          Int      @id @default(autoincrement())
+  title       String
+  album       String
+  duration    String
+  cover       String
+  audioUrl    String   @default("")
+  featured    Boolean  @default(false)
+  playCount   Int      @default(0)
+  downloadCount Int    @default(0)
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Album {
+  id          Int      @id @default(autoincrement())
+  title       String
+  year        String
+  type        String
+  cover       String
+  trackCount  Int      @default(0)
+  description String   @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model StreamingLink {
+  id        Int      @id @default(autoincrement())
+  platform  String   @unique
+  url       String
+  active    Boolean  @default(true)
+}
+
+model Event {
+  id          Int      @id @default(autoincrement())
+  title       String
+  date        String
+  day         String
+  month       String
+  time        String
+  location    String
+  image       String
+  category    String
+  description String   @db.Text
+  price       String
+  spots       String
+  status      String   @default("upcoming")
+  rsvps       Rsvp[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Rsvp {
+  id            Int      @id @default(autoincrement())
+  event         Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  eventId       Int
+  name          String
+  email         String
+  phone         String
+  ticketCount   Int      @default(1)
+  paymentStatus String   @default("pending")
+  createdAt     DateTime @default(now())
+}
+
+model BlogPost {
+  id        Int      @id @default(autoincrement())
+  title     String
+  excerpt   String   @db.Text
+  content   String   @db.LongText
+  image     String
+  category  String
+  author    String   @default("Succeed Michael Lawani")
+  date      String
+  readTime  String
+  tags      String   @default("")
+  featured  Boolean  @default(false)
+  status    String   @default("published")
+  viewCount Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Contact {
+  id          Int      @id @default(autoincrement())
+  name        String
+  email       String
+  subject     String
+  inquiryType String
+  message     String
+  status      String   @default("unread")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Subscriber {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
+
+model FashionInquiry {
+  id          Int      @id @default(autoincrement())
+  name        String
+  email       String
+  phone       String
+  garmentType String
+  measurements String   @db.Text
+  budget      String
+  notes       String   @db.Text
+  status      String   @default("new")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model SiteContent {
+  id    Int    @id @default(autoincrement())
+  key   String @unique
+  value String @db.Text
+}

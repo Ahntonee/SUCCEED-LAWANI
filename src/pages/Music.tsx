@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { Play, Pause, SkipForward, SkipBack, Download, Music2, Disc3, Star, Headphones } from 'lucide-react';
+import { api } from '../lib/api';
 
 interface Track {
   id: number;
@@ -18,68 +19,28 @@ interface Album {
   year: string;
   type: string;
   cover: string;
-  tracks: number;
+  trackCount: number;
   description: string;
 }
 
-const albums: Album[] = [
-  {
-    id: 1,
-    title: 'Daily Miracles',
-    year: '2026',
-    type: 'Album',
-    cover: '/images/album-daily-miracles.jpg',
-    tracks: 12,
-    description: 'An inspirational journey through faith, gratitude, and the beauty of everyday blessings. Features the hit title track and collaborations with top gospel artists.',
-  },
-  {
-    id: 2,
-    title: 'Philistine',
-    year: '2025',
-    type: 'Single',
-    cover: '/images/album-philistine.jpg',
-    tracks: 1,
-    description: 'A powerful declaration of victory over every obstacle. This anthem of triumph has resonated with millions facing their own giants.',
-  },
-  {
-    id: 3,
-    title: 'Rise Up',
-    year: '2024',
-    type: 'EP',
-    cover: '/images/album-daily-miracles.jpg',
-    tracks: 6,
-    description: 'The debut EP that introduced Succeed to the world. A collection of uplifting songs about perseverance, hope, and never giving up on your dreams.',
-  },
-  {
-    id: 4,
-    title: 'Eternal Praise',
-    year: '2023',
-    type: 'Single',
-    cover: '/images/album-philistine.jpg',
-    tracks: 1,
-    description: 'A soul-stirring worship single recorded live at the Victory Christian Centre. Captures the raw energy of communal praise.',
-  },
-];
-
-const tracks: Track[] = [
-  { id: 1, title: 'Daily Miracles', album: 'Daily Miracles', duration: '4:12', cover: '/images/album-daily-miracles.jpg', featured: true },
-  { id: 2, title: 'Philistine', album: 'Philistine', duration: '3:45', cover: '/images/album-philistine.jpg', featured: true },
-  { id: 3, title: 'Rise Up', album: 'Rise Up', duration: '3:58', cover: '/images/album-daily-miracles.jpg', featured: false },
-  { id: 4, title: 'Eternal Praise', album: 'Eternal Praise', duration: '5:21', cover: '/images/album-philistine.jpg', featured: false },
-  { id: 5, title: 'Victory Dance', album: 'Daily Miracles', duration: '3:33', cover: '/images/album-daily-miracles.jpg', featured: false },
-  { id: 6, title: 'Your Grace', album: 'Daily Miracles', duration: '4:45', cover: '/images/album-daily-miracles.jpg', featured: false },
-  { id: 7, title: 'No Limits', album: 'Rise Up', duration: '3:22', cover: '/images/album-daily-miracles.jpg', featured: false },
-  { id: 8, title: 'Faith Over Fear', album: 'Rise Up', duration: '4:01', cover: '/images/album-daily-miracles.jpg', featured: false },
-];
-
 export default function Music() {
+  const [tracks, setTracks] = useState<Track[]>([]);
+  const [albums, setAlbums] = useState<Album[]>([]);
+  const [streamingLinks, setStreamingLinks] = useState<{ id: number; platform: string; url: string }[]>([]);
   const [currentTrack, setCurrentTrack] = useState<number | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const tracksRef = useRef<Track[]>([]);
+
+  // Keep ref in sync so interval callbacks see fresh tracks list
+  useEffect(() => { tracksRef.current = tracks; }, [tracks]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
+    api.getTracks().then(setTracks).catch(console.error);
+    api.getAlbums().then(setAlbums).catch(console.error);
+    api.getStreamingLinks().then(setStreamingLinks).catch(console.error);
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
@@ -115,18 +76,20 @@ export default function Music() {
   };
 
   const handleNext = () => {
-    if (currentTrack === null) return;
-    const currentIndex = tracks.findIndex((t) => t.id === currentTrack);
-    const nextIndex = (currentIndex + 1) % tracks.length;
-    setCurrentTrack(tracks[nextIndex].id);
+    const list = tracksRef.current;
+    if (currentTrack === null || list.length === 0) return;
+    const currentIndex = list.findIndex((t) => t.id === currentTrack);
+    const nextIndex = (currentIndex + 1) % list.length;
+    setCurrentTrack(list[nextIndex].id);
     setProgress(0);
   };
 
   const handlePrev = () => {
-    if (currentTrack === null) return;
-    const currentIndex = tracks.findIndex((t) => t.id === currentTrack);
-    const prevIndex = (currentIndex - 1 + tracks.length) % tracks.length;
-    setCurrentTrack(tracks[prevIndex].id);
+    const list = tracksRef.current;
+    if (currentTrack === null || list.length === 0) return;
+    const currentIndex = list.findIndex((t) => t.id === currentTrack);
+    const prevIndex = (currentIndex - 1 + list.length) % list.length;
+    setCurrentTrack(list[prevIndex].id);
     setProgress(0);
   };
 
@@ -168,14 +131,14 @@ export default function Music() {
                 <div className="flex items-center gap-3 bg-white rounded-xl px-5 py-3 shadow-md">
                   <Disc3 className="text-[#0d9488]" size={24} />
                   <div>
-                    <div className="font-bold text-[#0f172a]">4</div>
+                    <div className="font-bold text-[#0f172a]">{albums.length || '4'}</div>
                     <div className="text-xs text-[#64748b]">Albums & EPs</div>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 bg-white rounded-xl px-5 py-3 shadow-md">
                   <Music2 className="text-[#0d9488]" size={24} />
                   <div>
-                    <div className="font-bold text-[#0f172a]">20+</div>
+                    <div className="font-bold text-[#0f172a]">{tracks.length > 0 ? `${tracks.length}+` : '20+'}</div>
                     <div className="text-xs text-[#64748b]">Released Tracks</div>
                   </div>
                 </div>
@@ -351,7 +314,7 @@ export default function Music() {
                     <Star size={12} className="text-[#f59e0b]" />
                     <span>{album.year}</span>
                     <span>&bull;</span>
-                    <span>{album.tracks} tracks</span>
+                    <span>{album.trackCount} tracks</span>
                   </div>
                   <p className="text-[#64748b] text-sm leading-relaxed line-clamp-3">{album.description}</p>
                 </div>
@@ -371,13 +334,16 @@ export default function Music() {
             Available on all major streaming services. Add to your playlists and never miss a release.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
-            {['Spotify', 'Apple Music', 'YouTube Music', 'Boomplay', 'Audiomack', 'Deezer'].map((platform) => (
-              <button
-                key={platform}
+            {(streamingLinks.length > 0 ? streamingLinks : [{ id: 0, platform: 'Spotify', url: '#' }, { id: 1, platform: 'Apple Music', url: '#' }, { id: 2, platform: 'YouTube Music', url: '#' }, { id: 3, platform: 'Boomplay', url: '#' }, { id: 4, platform: 'Audiomack', url: '#' }, { id: 5, platform: 'Deezer', url: '#' }]).map((link) => (
+              <a
+                key={link.id}
+                href={link.url || '#'}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="bg-white/10 hover:bg-[#0d9488] text-white px-6 py-3 rounded-full font-semibold transition-all duration-300 hover:-translate-y-0.5"
               >
-                {platform}
-              </button>
+                {link.platform}
+              </a>
             ))}
           </div>
         </div>

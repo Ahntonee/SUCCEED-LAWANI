@@ -5,16 +5,42 @@ import Events from './pages/Events'
 import Blog from './pages/Blog'
 import Music from './pages/Music'
 import Contact from './pages/Contact'
+import AdminLogin from './pages/admin/AdminLogin'
+import AdminLayout from './layouts/AdminLayout'
+import AdminDashboard from './pages/admin/AdminDashboard'
+import AdminMusic from './pages/admin/AdminMusic'
+import AdminEvents from './pages/admin/AdminEvents'
+import AdminBlog from './pages/admin/AdminBlog'
+import AdminContacts from './pages/admin/AdminContacts'
+import AdminContent from './pages/admin/AdminContent'
+import AdminFashion from './pages/admin/AdminFashion'
+import AdminSubscribers from './pages/admin/AdminSubscribers'
+import AdminSettings from './pages/admin/AdminSettings'
 
 export default function App() {
   return (
     <Routes>
+      {/* Public site */}
       <Route path="/" element={<Home />} />
       <Route path="/about" element={<About />} />
       <Route path="/events" element={<Events />} />
       <Route path="/blog" element={<Blog />} />
       <Route path="/music" element={<Music />} />
       <Route path="/contact" element={<Contact />} />
+
+      {/* Admin */}
+      <Route path="/admin/login" element={<AdminLogin />} />
+      <Route path="/admin" element={<AdminLayout />}>
+        <Route index element={<AdminDashboard />} />
+        <Route path="music" element={<AdminMusic />} />
+        <Route path="events" element={<AdminEvents />} />
+        <Route path="blog" element={<AdminBlog />} />
+        <Route path="contacts" element={<AdminContacts />} />
+        <Route path="fashion" element={<AdminFashion />} />
+        <Route path="subscribers" element={<AdminSubscribers />} />
+        <Route path="content" element={<AdminContent />} />
+        <Route path="settings" element={<AdminSettings />} />
+      </Route>
     </Routes>
   )
 }

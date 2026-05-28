@@ -3,6 +3,7 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { Calendar, Clock, ArrowRight, User, Tag, Search } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { api } from '../lib/api';
 
 interface BlogPost {
   id: number;
@@ -18,107 +19,29 @@ interface BlogPost {
   featured: boolean;
 }
 
-const blogPosts: BlogPost[] = [
-  {
-    id: 1,
-    title: 'The Story Behind Daily Miracles: From Traffic Jam to Timeless Anthem',
-    excerpt: 'How a moment of prayer in Lagos traffic inspired one of my most powerful songs yet. The journey from concept to creation was nothing short of divine.',
-    content: `It was a rainy Tuesday evening in Lagos. I was stuck in the infamous Third Mainland Bridge traffic, frustration building with every passing minute. My phone was dead, the AC was struggling, and I had a meeting I was clearly going to miss.\n\nIn that moment of helplessness, I did something I had not done in a while — I prayed. Not a rushed blessing or a quick wish, but a genuine conversation with God. I asked for patience, for peace, and for the ability to see the miracles in everyday moments.\n\nAs the rain pattered against my windshield, the melody came to me. It started as a hum, then words began to form. "Every morning I wake up, I see Your daily miracles..." The traffic that had felt like a curse became a blessing — it gave me the stillness I needed to receive this gift.\n\nWhen I finally got home three hours later, I recorded a voice note that would become the foundation of "Daily Miracles." The song wrote itself over the next week, each verse flowing like a continuation of that prayer on the bridge.\n\nWorking with producer Salvage Beat, we crafted a sound that was both contemporary and timeless — something that could play in a church on Sunday morning or a playlist during a workout. The response has been overwhelming. Messages from people sharing their own "daily miracles" stories fill my DMs every day.\n\nThis song taught me that inspiration is everywhere. You just need to be still enough to hear it.`,
-    image: '/images/album-daily-miracles.jpg',
-    category: 'Music',
-    author: 'Succeed Michael Lawani',
-    date: 'May 10, 2026',
-    readTime: '5 min read',
-    tags: ['Music Production', 'Inspiration', 'Behind the Scenes'],
-    featured: true,
-  },
-  {
-    id: 2,
-    title: 'Agbada: The Royal Attire Reimagined for the Modern Era',
-    excerpt: 'Exploring how modern fashion designers are transforming traditional Agbada into contemporary statements of elegance and power.',
-    content: `The Agbada has long been a symbol of prestige, power, and cultural pride in West Africa. Traditionally worn by royalty and dignitaries, this flowing wide-sleeved robe carries centuries of history in every stitch. But how does a garment so deeply rooted in tradition find its place in the modern fashion landscape?\n\nAt TheSucceedeer Designs, we believe that tradition and innovation are not opposites — they are dance partners. Our approach to the Agbada honors its regal heritage while embracing contemporary aesthetics. We experiment with lighter fabrics for the Nigerian climate, incorporate modern tailoring techniques for a more structured silhouette, and introduce subtle design elements that speak to a global audience.\n\nOne of our most popular designs, the "Executive Agbada," features a fitted inner layer paired with a flowing outer robe, creating a profile that is both commanding and comfortable. We have replaced the traditional heavy embroidery with laser-cut geometric patterns, reducing weight while maintaining visual impact.\n\nThe response from our clients has been incredible. Young professionals are wearing our Agbadas to corporate events. Grooms are choosing them for weddings. Even international clients have discovered the beauty of this garment through our online platform.\n\nThe Agbada is not just clothing — it is a statement. It says, "I honor where I come from, and I am confident in where I am going." That is a message that transcends culture and time.`,
-    image: '/images/blog-fashion.jpg',
-    category: 'Fashion',
-    author: 'Succeed Michael Lawani',
-    date: 'April 28, 2026',
-    readTime: '6 min read',
-    tags: ['Fashion Design', 'African Culture', 'Style Guide'],
-    featured: false,
-  },
-  {
-    id: 3,
-    title: 'Facebook Ads in 2026: What Is Actually Working Right Now',
-    excerpt: 'Latest strategies, algorithm updates, and creative approaches that are driving 5x ROAS for our clients in the current landscape.',
-    content: `The digital marketing landscape is evolving faster than ever, and Facebook Ads (now Meta Ads) continues to be one of the most powerful tools in a marketer's arsenal — if you know how to use it.\n\nAfter managing over 500 campaigns and ₦500M+ in ad spend, here is what is actually working in 2026:\n\n1. AI-Powered Creative Optimization\nMeta's AI has become incredibly sophisticated at matching creative variations to different audience segments. We are now creating 10-15 variations of each ad (different hooks, visuals, CTAs) and letting the algorithm do the heavy lifting. The result? A 40% improvement in cost per acquisition.\n\n2. First-Party Data Strategies\nWith the continued phase-out of third-party cookies, first-party data has become gold. We are helping clients build robust email lists, SMS databases, and in-app engagement tracking. The campaigns leveraging first-party data are seeing 3x higher conversion rates.\n\n3. Video-First Creative\nShort-form video (15-30 seconds) is dominating. Not polished, cinematic ads — but authentic, raw, phone-shot content that feels native to the platform. The best performing ad we ran last month was shot on an iPhone in 10 minutes.\n\n4. Advantage+ Shopping Campaigns\nMeta's automated shopping campaigns have matured significantly. For e-commerce brands with 50+ products, ASC is delivering 25% better ROAS than manual campaigns. The key is feeding the algorithm high-quality product data.\n\n5. Community-Building Over Conversion\nThe most successful brands are using ads to build communities, not just drive sales. Lead with value — educational content, entertainment, inspiration — and let the conversions follow naturally.`,
-    image: '/images/marketing-workspace.jpg',
-    category: 'Marketing',
-    author: 'Succeed Michael Lawani',
-    date: 'April 15, 2026',
-    readTime: '8 min read',
-    tags: ['Facebook Ads', 'Digital Marketing', 'Growth Strategy'],
-    featured: false,
-  },
-  {
-    id: 4,
-    title: 'From Sketch to Stage: My Creative Process Revealed',
-    excerpt: 'An inside look at how I balance music, fashion, and marketing — and the creative rituals that keep me inspired.',
-    content: `People often ask me how I manage to juggle three demanding careers simultaneously. The truth is, I do not see them as separate — they are different expressions of the same creative impulse.\n\nMy day starts at 5 AM with prayer and meditation. This quiet hour sets the tone for everything that follows. I believe creativity is a spiritual practice; you cannot pour from an empty cup.\n\nFrom 6 to 9 AM, I am in my design studio. The morning hours are when my visual creativity peaks. I sketch new designs, review fabric samples, and oversee ongoing projects. There is something magical about the morning light hitting the textiles — it sparks ideas that no amount of Pinterest scrolling could.\n\nLate morning through afternoon is music time. I head to the studio and work on whatever project is active — recording vocals, reviewing mixes, or writing new material. Music requires a different kind of energy; it is more emotional, more vulnerable. I find that doing it after the structured work of design actually helps me access that emotional space more easily.\n\nEvenings are for marketing strategy and client calls. This is when I switch to analytical mode — reviewing campaign data, brainstorming with clients, and planning strategies. The shift from creative to analytical work keeps my mind sharp and prevents burnout.\n\nThe secret? Each discipline refreshes me for the others. When music feels heavy, I turn to design. When design feels stagnant, I dive into data. It is a rhythm, not a race.`,
-    image: '/images/blog-music.jpg',
-    category: 'Lifestyle',
-    author: 'Succeed Michael Lawani',
-    date: 'March 30, 2026',
-    readTime: '7 min read',
-    tags: ['Creativity', 'Productivity', 'Personal Growth'],
-    featured: false,
-  },
-  {
-    id: 5,
-    title: 'Building TheSucceedeer: Lessons from 5 Years in Fashion',
-    excerpt: 'The highs, the lows, and the invaluable lessons learned while building a fashion brand from scratch in Nigeria.',
-    content: `Five years ago, TheSucceedeer Designs was a dream sketched in a notebook. Today, it is a recognized brand with clients across three continents. The journey has been anything but smooth — and I would not have it any other way.\n\nLesson 1: Start Before You Are Ready\nI launched with three designs and a borrowed sewing machine. If I had waited for the "perfect" setup, I would still be waiting. Perfection is the enemy of progress. Start messy, start small, but start.\n\nLesson 2: Your First Customers Are Everything\nOur earliest clients were family and friends. They gave us honest feedback, referred others, and became our biggest advocates. Treat every early customer like a partner in your journey — because they are.\n\nLesson 3: Quality Is Non-Negotiable\nIn the fashion industry, one bad piece can destroy a reputation built over years. We have a zero-compromise policy on quality. Every stitch, every button, every hem is checked and double-checked. This commitment to excellence is why 70% of our business comes from repeat customers.\n\nLesson 4: Embrace Technology\nFrom 3D body scanning for perfect fits to AI-powered design tools, technology has transformed our workflow. We invested early in an e-commerce platform and social media marketing, which proved invaluable during the pandemic when physical stores were closed.\n\nLesson 5: Stay True to Your Vision\nThere were moments when trends tempted us away from our core aesthetic. We experimented, learned, and always returned to our foundation: celebrating African elegance with modern sophistication. Authenticity is your greatest competitive advantage.`,
-    image: '/images/fashion-show.jpg',
-    category: 'Fashion',
-    author: 'Succeed Michael Lawani',
-    date: 'March 12, 2026',
-    readTime: '6 min read',
-    tags: ['Entrepreneurship', 'Fashion Business', 'Growth'],
-    featured: false,
-  },
-  {
-    id: 6,
-    title: 'The Power of Collaboration: My Most Meaningful Partnerships',
-    excerpt: 'Why working with other talented creatives has been the catalyst for some of my best work across music, fashion, and beyond.',
-    content: `If there is one thing I have learned in my creative journey, it is this: collaboration multiplies talent. Some of my most impactful projects have come from joining forces with other passionate, skilled individuals.\n\nThe Daily Miracles album is a perfect example. Working with producer Salvage Beat brought a sonic dimension I could never have achieved alone. His understanding of Afrobeats fusion and gospel created a soundscape that elevated my songwriting to new heights.\n\nIn fashion, collaborating with textile artisans in Kano and Aso-Oke weavers in Iseyin has deepened TheSucceedeer Designs' connection to authentic Nigerian craftsmanship. These partnerships do not just improve our products — they preserve cultural heritage and support local economies.\n\nOn the marketing front, partnering with brands like TechPoint Africa and BellaNaija has expanded our reach exponentially. Cross-promotion with complementary brands (not competitors) creates win-win scenarios that no amount of ad spend can replicate.\n\nMy advice to every creative: find your tribe. Seek out people who challenge you, complement your skills, and share your values. The magic happens at the intersection of different perspectives. Build a network before you need it, give more than you take, and always deliver on your promises. Collaboration is not just a strategy — it is a mindset.`,
-    image: '/images/hero-portrait.jpg',
-    category: 'Music',
-    author: 'Succeed Michael Lawani',
-    date: 'February 20, 2026',
-    readTime: '5 min read',
-    tags: ['Collaboration', 'Networking', 'Creative Growth'],
-    featured: false,
-  },
-];
-
 export default function Blog() {
+  const [posts, setPosts] = useState<BlogPost[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
 
   useEffect(() => {
     window.scrollTo(0, 0);
+    api.getPublicPosts().then(setPosts).catch(console.error).finally(() => setLoading(false));
   }, []);
 
   const categories = ['All', 'Music', 'Fashion', 'Marketing', 'Lifestyle'];
 
-  const filteredPosts = blogPosts.filter((post) => {
+  const filteredPosts = posts.filter((post) => {
     const matchesCategory = activeCategory === 'All' || post.category === activeCategory;
     const matchesSearch = post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       post.excerpt.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
   });
 
-  const featuredPost = blogPosts.find((p) => p.featured);
-  const regularPosts = filteredPosts.filter((p) => !p.featured || activeCategory !== 'All');
+  const featuredPost = posts.find((p) => p.featured);
+  const regularPosts = filteredPosts.filter((p) => !p.featured || activeCategory !== 'All' || !!searchQuery);
 
   return (
     <div className="min-h-screen bg-white">
@@ -221,6 +144,14 @@ export default function Blog() {
       {/* Blog Grid */}
       <section className="py-12 bg-[#f8fafc]">
         <div className="max-w-[1400px] mx-auto px-6">
+          {loading && (
+            <div className="flex justify-center items-center py-24">
+              <div className="w-10 h-10 border-4 border-[#0d9488]/30 border-t-[#0d9488] rounded-full animate-spin" />
+            </div>
+          )}
+          {!loading && regularPosts.length === 0 && (
+            <div className="text-center py-20 text-[#64748b]">No posts found.</div>
+          )}
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {regularPosts.map((post) => (
               <div

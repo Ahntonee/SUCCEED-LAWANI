@@ -3,6 +3,7 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { Calendar, Clock, MapPin, Ticket, Users, ArrowRight } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { api } from '../lib/api';
 
 interface Event {
   id: number;
@@ -17,138 +18,18 @@ interface Event {
   description: string;
   price: string;
   spots: string;
-  status: 'upcoming' | 'past';
+  status: string;
 }
 
-const allEvents: Event[] = [
-  {
-    id: 1,
-    title: 'Daily Miracles Album Launch',
-    date: 'June 15, 2026',
-    day: '15',
-    month: 'JUN',
-    time: '6:00 PM',
-    location: 'Eko Hotel & Suites, Lagos',
-    image: '/images/concert.jpg',
-    category: 'Music',
-    description: 'Join us for an unforgettable night of music, worship, and celebration as we launch the highly anticipated "Daily Miracles" album. Experience live performances, special guest appearances, and an atmosphere filled with inspiration and joy.',
-    price: '₦5,000',
-    spots: '500 spots left',
-    status: 'upcoming',
-  },
-  {
-    id: 2,
-    title: 'TheSucceedeer Fashion Showcase',
-    date: 'July 22, 2026',
-    day: '22',
-    month: 'JUL',
-    time: '4:00 PM',
-    location: 'Transcorp Hilton, Abuja',
-    image: '/images/fashion-show.jpg',
-    category: 'Fashion',
-    description: 'An exclusive runway show featuring our latest collection of bespoke suits, agbada, and contemporary African wear. Witness the fusion of tradition and modernity in a stunning visual spectacle.',
-    price: '₦10,000',
-    spots: '200 spots left',
-    status: 'upcoming',
-  },
-  {
-    id: 3,
-    title: 'Digital Marketing Masterclass',
-    date: 'August 10, 2026',
-    day: '10',
-    month: 'AUG',
-    time: '2:00 PM',
-    location: 'Online (Zoom)',
-    image: '/images/marketing-workspace.jpg',
-    category: 'Education',
-    description: 'Learn advanced Facebook Ads strategies, DMI techniques, and conversion optimization from industry experts. Perfect for business owners, marketers, and anyone looking to scale their digital presence.',
-    price: '₦15,000',
-    spots: 'Unlimited',
-    status: 'upcoming',
-  },
-  {
-    id: 4,
-    title: 'Philistine Live Concert',
-    date: 'September 5, 2026',
-    day: '05',
-    month: 'SEP',
-    time: '5:00 PM',
-    location: 'Aztec Arcum Arena, Port Harcourt',
-    image: '/images/concert.jpg',
-    category: 'Music',
-    description: 'Experience the power of "Philistine" live! An evening of victory, praise, and powerful declarations. Come prepared for an electrifying performance that will leave you transformed.',
-    price: '₦3,000',
-    spots: '1,000 spots left',
-    status: 'upcoming',
-  },
-  {
-    id: 5,
-    title: 'Lagos Fashion Week 2025',
-    date: 'October 12, 2025',
-    day: '12',
-    month: 'OCT',
-    time: '7:00 PM',
-    location: 'Federal Palace Hotel, Lagos',
-    image: '/images/fashion-show.jpg',
-    category: 'Fashion',
-    description: 'TheSucceedeer Designs made a stunning debut at Lagos Fashion Week, showcasing the "Royal Heritage" collection that blends traditional African aesthetics with contemporary fashion trends.',
-    price: 'Free',
-    spots: 'Event ended',
-    status: 'past',
-  },
-  {
-    id: 6,
-    title: 'New Year Worship Concert',
-    date: 'January 1, 2026',
-    day: '01',
-    month: 'JAN',
-    time: '10:00 PM',
-    location: 'Tafawa Balewa Square, Lagos',
-    image: '/images/concert.jpg',
-    category: 'Music',
-    description: 'A spectacular New Year celebration concert that brought together over 10,000 worshippers for a night of praise, prayer, and prophetic declarations for the year ahead.',
-    price: 'Free',
-    spots: 'Event ended',
-    status: 'past',
-  },
-  {
-    id: 7,
-    title: 'Digital Marketing Summit',
-    date: 'March 15, 2026',
-    day: '15',
-    month: 'MAR',
-    time: '9:00 AM',
-    location: 'Landmark Centre, Lagos',
-    image: '/images/marketing-workspace.jpg',
-    category: 'Education',
-    description: 'A full-day intensive workshop where Succeed shared cutting-edge strategies for Facebook Ads, conversion optimization, and brand growth with over 200 participants.',
-    price: '₦25,000',
-    spots: 'Event ended',
-    status: 'past',
-  },
-  {
-    id: 8,
-    title: 'Valentine Special Performance',
-    date: 'February 14, 2026',
-    day: '14',
-    month: 'FEB',
-    time: '7:00 PM',
-    location: 'Jazzhole, Lagos',
-    image: '/images/concert.jpg',
-    category: 'Music',
-    description: 'An intimate acoustic evening filled with love songs, inspirational music, and special duets. A perfect Valentine celebration for couples and music lovers.',
-    price: '₦8,000',
-    spots: 'Event ended',
-    status: 'past',
-  },
-];
-
 export default function Events() {
+  const [allEvents, setAllEvents] = useState<Event[]>([]);
+  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'upcoming' | 'past'>('all');
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
 
   useEffect(() => {
     window.scrollTo(0, 0);
+    api.getEvents().then(setAllEvents).catch(console.error).finally(() => setLoading(false));
   }, []);
 
   const filteredEvents = allEvents.filter((event) => {
@@ -202,6 +83,14 @@ export default function Events() {
       {/* Events Grid */}
       <section className="py-16 bg-[#f8fafc]">
         <div className="max-w-[1400px] mx-auto px-6">
+          {loading && (
+            <div className="flex justify-center items-center py-24">
+              <div className="w-10 h-10 border-4 border-[#0d9488]/30 border-t-[#0d9488] rounded-full animate-spin" />
+            </div>
+          )}
+          {!loading && filteredEvents.length === 0 && (
+            <div className="text-center py-20 text-[#64748b]">No events found.</div>
+          )}
           <div className="grid md:grid-cols-2 gap-8">
             {filteredEvents.map((event) => (
               <div

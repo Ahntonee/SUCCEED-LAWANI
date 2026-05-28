@@ -4,6 +4,7 @@ import Footer from '../components/Footer';
 import { Link } from 'react-router';
 import { Play, Pause, SkipForward, SkipBack, Music, Palette, TrendingUp, Calendar, ArrowRight, Heart, Phone, Send, Mail, MapPin, Briefcase } from 'lucide-react';
 import { toast } from 'sonner';
+import { api } from '../lib/api';
 
 const services = [
   {
@@ -32,79 +33,28 @@ const services = [
   },
 ];
 
-const musicTracks = [
-  { id: 1, title: 'Daily Miracles', cover: '/images/album-daily-miracles.jpg' },
-  { id: 2, title: 'Philistine', cover: '/images/album-philistine.jpg' },
-  { id: 3, title: 'Rise Up', cover: '/images/album-daily-miracles.jpg' },
-];
-
-const events = [
-  {
-    day: '15',
-    month: 'JUN',
-    title: 'Daily Miracles Album Launch',
-    desc: 'Join us for an unforgettable night of music, worship, and celebration.',
-    location: 'Lagos, Nigeria',
-    time: '6:00 PM',
-  },
-  {
-    day: '22',
-    month: 'JUL',
-    title: 'TheSucceedeer Fashion Showcase',
-    desc: 'Exclusive runway show featuring bespoke suits, agbada, and African wear.',
-    location: 'Abuja, Nigeria',
-    time: '4:00 PM',
-  },
-  {
-    day: '10',
-    month: 'AUG',
-    title: 'Digital Marketing Masterclass',
-    desc: 'Learn advanced Facebook Ads strategies and conversion optimization.',
-    location: 'Online (Zoom)',
-    time: '2:00 PM',
-  },
-  {
-    day: '05',
-    month: 'SEP',
-    title: 'Philistine Live Concert',
-    desc: 'Experience the power of Philistine live! An evening of victory and praise.',
-    location: 'Port Harcourt',
-    time: '5:00 PM',
-  },
-];
-
-const blogPosts = [
-  {
-    image: '/images/album-daily-miracles.jpg',
-    tag: 'Music',
-    title: 'The Story Behind Daily Miracles',
-    excerpt: 'How a moment of prayer in Lagos traffic inspired one of my most powerful songs yet.',
-    link: '/blog',
-  },
-  {
-    image: '/images/blog-fashion.jpg',
-    tag: 'Fashion',
-    title: 'Agbada: The Royal Attire Reimagined',
-    excerpt: 'How modern fashion designers are transforming traditional Agbada into contemporary statements.',
-    link: '/blog',
-  },
-  {
-    image: '/images/marketing-workspace.jpg',
-    tag: 'Marketing',
-    title: 'Facebook Ads in 2026: What Is Working Now',
-    excerpt: 'Latest strategies and creative approaches driving 5x ROAS for our clients right now.',
-    link: '/blog',
-  },
-];
+interface HomeTrack { id: number; title: string; cover: string; }
+interface HomeEvent { day: string; month: string; title: string; description: string; location: string; time: string; }
+interface HomeBlogPost { id: number; image: string; category: string; title: string; excerpt: string; }
 
 export default function Home() {
+  const [musicTracks, setMusicTracks] = useState<HomeTrack[]>([]);
+  const [events, setEvents] = useState<HomeEvent[]>([]);
+  const [blogPosts, setBlogPosts] = useState<HomeBlogPost[]>([]);
   const [currentTrack, setCurrentTrack] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [contactSending, setContactSending] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const tracksRef = useRef<HomeTrack[]>([]);
+
+  useEffect(() => { tracksRef.current = musicTracks; }, [musicTracks]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
+    api.getTracks().then((data: HomeTrack[]) => setMusicTracks(data.slice(0, 3))).catch(console.error);
+    api.getEvents('upcoming').then((data: HomeEvent[]) => setEvents(data.slice(0, 4))).catch(console.error);
+    api.getPublicPosts().then((data: HomeBlogPost[]) => setBlogPosts(data.slice(0, 3))).catch(console.error);
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
@@ -130,19 +80,33 @@ export default function Home() {
   }, [isPlaying]);
 
   const handleNext = () => {
-    setCurrentTrack((prev) => (prev + 1) % musicTracks.length);
+    const list = tracksRef.current;
+    if (list.length === 0) return;
+    setCurrentTrack((prev) => (prev + 1) % list.length);
     setProgress(0);
   };
 
   const handlePrev = () => {
-    setCurrentTrack((prev) => (prev - 1 + musicTracks.length) % musicTracks.length);
+    const list = tracksRef.current;
+    if (list.length === 0) return;
+    setCurrentTrack((prev) => (prev - 1 + list.length) % list.length);
     setProgress(0);
   };
 
-  const handleContactSubmit = (e: React.FormEvent) => {
+  const handleContactSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast.success('Thank you for reaching out! Succeed will get back to you within 24 hours.');
-    (e.target as HTMLFormElement).reset();
+    const form = e.target as HTMLFormElement;
+    const data = Object.fromEntries(new FormData(form).entries());
+    setContactSending(true);
+    try {
+      await api.submitContact(data);
+      toast.success('Thank you for reaching out! Succeed will get back to you within 24 hours.');
+      form.reset();
+    } catch {
+      toast.error('Failed to send message. Please try again.');
+    } finally {
+      setContactSending(false);
+    }
   };
 
   return (
@@ -383,7 +347,7 @@ export default function Home() {
                 </div>
                 <div className="p-6 flex-1">
                   <h3 className="text-lg font-bold text-[#0f172a] mb-2 group-hover:text-[#0d9488] transition-colors">{event.title}</h3>
-                  <p className="text-[#64748b] text-sm mb-3">{event.desc}</p>
+                  <p className="text-[#64748b] text-sm mb-3">{event.description}</p>
                   <div className="flex flex-wrap gap-4 text-xs text-[#64748b]">
                     <span className="flex items-center gap-1"><MapPin size={12} className="text-[#0d9488]" /> {event.location}</span>
                     <span className="flex items-center gap-1"><Calendar size={12} className="text-[#0d9488]" /> {event.time}</span>
@@ -411,12 +375,12 @@ export default function Home() {
           </div>
           <div className="grid md:grid-cols-3 gap-8">
             {blogPosts.map((post) => (
-              <Link key={post.title} to={post.link} className="bg-[#f8fafc] rounded-3xl overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-2 group block">
+              <Link key={post.id} to="/blog" className="bg-[#f8fafc] rounded-3xl overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-2 group block">
                 <div className="h-56 overflow-hidden">
                   <img src={post.image} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                 </div>
                 <div className="p-6">
-                  <span className="inline-block bg-[#0d9488] text-white text-xs font-bold px-3 py-1 rounded-full mb-3">{post.tag}</span>
+                  <span className="inline-block bg-[#0d9488] text-white text-xs font-bold px-3 py-1 rounded-full mb-3">{post.category}</span>
                   <h3 className="text-lg font-bold text-[#0f172a] mb-2 group-hover:text-[#0d9488] transition-colors">{post.title}</h3>
                   <p className="text-[#64748b] text-sm leading-relaxed mb-4">{post.excerpt}</p>
                   <span className="text-[#0d9488] text-sm font-semibold flex items-center gap-1 group-hover:gap-2 transition-all">
@@ -463,22 +427,22 @@ export default function Home() {
               <form onSubmit={handleContactSubmit} className="space-y-5">
                 <div>
                   <label className="block text-sm font-semibold text-[#0f172a] mb-2">Your Name</label>
-                  <input type="text" required placeholder="Enter your name" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#0d9488] focus:outline-none focus:ring-4 focus:ring-[#0d9488]/10 transition-all" />
+                  <input name="name" type="text" required placeholder="Enter your name" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#0d9488] focus:outline-none focus:ring-4 focus:ring-[#0d9488]/10 transition-all" />
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-[#0f172a] mb-2">Email Address</label>
-                  <input type="email" required placeholder="Enter your email" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#0d9488] focus:outline-none focus:ring-4 focus:ring-[#0d9488]/10 transition-all" />
+                  <input name="email" type="email" required placeholder="Enter your email" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#0d9488] focus:outline-none focus:ring-4 focus:ring-[#0d9488]/10 transition-all" />
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-[#0f172a] mb-2">Subject</label>
-                  <input type="text" required placeholder="Music / Fashion / Marketing / Other" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#0d9488] focus:outline-none focus:ring-4 focus:ring-[#0d9488]/10 transition-all" />
+                  <input name="subject" type="text" required placeholder="Music / Fashion / Marketing / Other" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#0d9488] focus:outline-none focus:ring-4 focus:ring-[#0d9488]/10 transition-all" />
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-[#0f172a] mb-2">Message</label>
-                  <textarea required rows={4} placeholder="Tell me about your project..." className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#0d9488] focus:outline-none focus:ring-4 focus:ring-[#0d9488]/10 transition-all resize-none" />
+                  <textarea name="message" required rows={4} placeholder="Tell me about your project..." className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#0d9488] focus:outline-none focus:ring-4 focus:ring-[#0d9488]/10 transition-all resize-none" />
                 </div>
-                <button type="submit" className="w-full bg-[#0d9488] text-white py-3 rounded-xl font-semibold hover:bg-[#0f766e] transition-all hover:-translate-y-0.5 hover:shadow-lg flex items-center justify-center gap-2">
-                  <Send size={18} /> Send Message
+                <button type="submit" disabled={contactSending} className="w-full bg-[#0d9488] text-white py-3 rounded-xl font-semibold hover:bg-[#0f766e] transition-all hover:-translate-y-0.5 hover:shadow-lg flex items-center justify-center gap-2 disabled:opacity-60">
+                  {contactSending ? <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Sending...</> : <><Send size={18} /> Send Message</>}
                 </button>
               </form>
             </div>
@@ -487,7 +451,7 @@ export default function Home() {
       </section>
 
       {/* Audio Player */}
-      {isPlaying && (
+      {isPlaying && musicTracks.length > 0 && musicTracks[currentTrack] && (
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-2xl z-50 p-4">
           <div className="max-w-[1400px] mx-auto flex items-center gap-4">
             <img src={musicTracks[currentTrack].cover} alt="" className="w-12 h-12 rounded-lg object-cover" />

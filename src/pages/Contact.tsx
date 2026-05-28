@@ -3,6 +3,7 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { Phone, Mail, MapPin, Briefcase, Send, CheckCircle, MessageSquare, User, FileText } from 'lucide-react';
 import { toast } from 'sonner';
+import { api } from '../lib/api';
 
 const contactInfo = [
   {
@@ -53,6 +54,7 @@ export default function Contact() {
     message: '',
   });
   const [submitted, setSubmitted] = useState(false);
+  const [sending, setSending] = useState(false);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -62,14 +64,22 @@ export default function Contact() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
-    toast.success('Message sent successfully! Succeed will get back to you within 24 hours.');
-    setTimeout(() => {
-      setSubmitted(false);
-      setFormData({ name: '', email: '', subject: '', inquiryType: '', message: '' });
-    }, 3000);
+    setSending(true);
+    try {
+      await api.submitContact(formData);
+      setSubmitted(true);
+      toast.success('Message sent successfully! Succeed will get back to you within 24 hours.');
+      setTimeout(() => {
+        setSubmitted(false);
+        setFormData({ name: '', email: '', subject: '', inquiryType: '', message: '' });
+      }, 3000);
+    } catch {
+      toast.error('Failed to send message. Please try again.');
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -211,9 +221,14 @@ export default function Contact() {
                   </div>
                   <button
                     type="submit"
-                    className="w-full bg-[#0d9488] text-white py-3.5 rounded-xl font-semibold hover:bg-[#0f766e] transition-all duration-300 flex items-center justify-center gap-2 hover:-translate-y-0.5 hover:shadow-lg"
+                    disabled={sending}
+                    className="w-full bg-[#0d9488] text-white py-3.5 rounded-xl font-semibold hover:bg-[#0f766e] transition-all duration-300 flex items-center justify-center gap-2 hover:-translate-y-0.5 hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed"
                   >
-                    <Send size={18} /> Send Message
+                    {sending ? (
+                      <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Sending...</>
+                    ) : (
+                      <><Send size={18} /> Send Message</>
+                    )}
                   </button>
                 </form>
               )}
