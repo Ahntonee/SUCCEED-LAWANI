@@ -3,8 +3,10 @@ import { Save, Globe, RefreshCw } from 'lucide-react';
 import { api } from '../../lib/api';
 
 interface ContentMap { [key: string]: string; }
+interface ContentField { key: string; label: string; placeholder?: string; multiline?: boolean; }
+interface ContentSection { title: string; keys: ContentField[]; }
 
-const sections = [
+const sections: ContentSection[] = [
   {
     title: 'Hero Section',
     keys: [
