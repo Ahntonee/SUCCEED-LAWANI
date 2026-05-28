@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Mail, Trash2, X, Check } from 'lucide-react';
+import { Mail, Trash2, X } from 'lucide-react';
 import { api } from '../../lib/api';
 
 interface Contact { id: number; name: string; email: string; subject: string; inquiryType: string; message: string; status: string; createdAt: string; }

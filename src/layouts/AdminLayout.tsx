@@ -38,9 +38,6 @@ export default function AdminLayout() {
     navigate('/admin/login');
   };
 
-  const isActive = (path: string, exact?: boolean) =>
-    exact ? location.pathname === path : location.pathname.startsWith(path) && path !== '/admin';
-
   return (
     <div className="min-h-screen bg-[#f8fafc] flex">
       {/* Overlay */}
