@@ -138,3 +138,33 @@ model SiteContent {
   key   String @unique
   value String @db.Text
 }
+
+model Product {
+  id           Int      @id @default(autoincrement())
+  name         String
+  description  String   @db.Text
+  price        Float
+  comparePrice Float?
+  images       String   @default("")
+  category     String   @default("general")
+  tags         String   @default("")
+  stock        Int      @default(0)
+  status       String   @default("active")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Order {
+  id            Int      @id @default(autoincrement())
+  items         String   @db.Text
+  subtotal      Float
+  total         Float
+  customerName  String
+  customerEmail String
+  customerPhone String   @default("")
+  paymentMethod String
+  paymentRef    String   @default("")
+  status        String   @default("pending")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}

@@ -111,6 +111,27 @@ export const api = {
   submitRsvp: (eventId: number, data: object) =>
     request(`/events/${eventId}/rsvp`, { method: 'POST', body: JSON.stringify(data) }),
 
+  // Shop — public
+  getProducts: (params?: Record<string, string>) => {
+    const q = params ? '?' + new URLSearchParams(params).toString() : '';
+    return request(`/shop/products${q}`);
+  },
+  getProduct: (id: number) => request(`/shop/products/${id}`),
+  submitRsvpShop: (eventId: number, data: object) =>
+    request(`/events/${eventId}/rsvp`, { method: 'POST', body: JSON.stringify(data) }),
+  createOrder: (data: object) =>
+    request('/shop/orders', { method: 'POST', body: JSON.stringify(data) }),
+  createPaymentIntent: (amount: number) =>
+    request('/shop/create-payment-intent', { method: 'POST', body: JSON.stringify({ amount }) }),
+
+  // Shop — admin
+  getAllProducts: () => request('/shop/products'),
+  createProduct: (data: object) => request('/shop/products', { method: 'POST', body: JSON.stringify(data) }),
+  updateProduct: (id: number, data: object) => request(`/shop/products/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  deleteProduct: (id: number) => request(`/shop/products/${id}`, { method: 'DELETE' }),
+  getOrders: () => request('/shop/orders'),
+  updateOrder: (id: number, data: object) => request(`/shop/orders/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+
   // Fashion inquiries
   getFashionInquiries: (status?: string) => request(`/fashion${status ? `?status=${status}` : ''}`),
   updateFashionInquiry: (id: number, data: object) => request(`/fashion/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),

@@ -14,6 +14,7 @@ import contentRoutes from './routes/content';
 import subscribersRoutes from './routes/subscribers';
 import fashionRoutes from './routes/fashion';
 import uploadRoutes from './routes/upload';
+import shopRoutes from './routes/shop';
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -33,6 +34,7 @@ app.use('/api/content', contentRoutes);
 app.use('/api/subscribers', subscribersRoutes);
 app.use('/api/fashion', fashionRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/shop', shopRoutes);
 
 app.get('/api/health', (_req, res) => res.json({ status: 'ok', timestamp: new Date().toISOString() }));
 
