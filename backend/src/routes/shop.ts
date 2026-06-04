@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import prisma from '../db/prisma';
 import { requireAuth } from '../middleware/auth';
 import Stripe from 'stripe';
+import { sendOrderConfirmation } from '../services/email';
 
 const router = Router();
 
@@ -78,7 +79,20 @@ router.post('/orders', async (req: Request, res: Response) => {
       status: paymentRef ? 'paid' : 'pending',
     },
   });
-  res.status(201).json({ ...order, items: JSON.parse(order.items) });
+
+  // Send confirmation email (non-blocking)
+  const parsedItems = JSON.parse(order.items);
+  sendOrderConfirmation({
+    orderId: order.id,
+    customerName: order.customerName,
+    customerEmail: order.customerEmail,
+    items: parsedItems,
+    total: order.total,
+    paymentMethod: order.paymentMethod,
+    paymentRef: order.paymentRef,
+  }).catch((err) => console.error('Email error:', err));
+
+  res.status(201).json({ ...order, items: parsedItems });
 });
 
 // ─── ADMIN: Orders ────────────────────────────────────────────────────────────
