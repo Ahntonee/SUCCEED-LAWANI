@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate, Outlet } from 'react-router';
 import {
   LayoutDashboard, Music, Calendar, FileText, Mail, Settings,
-  LogOut, Menu, X, Shirt, Users, Globe, ChevronRight, ExternalLink,
+  LogOut, Menu, X, Shirt, Users, Globe, ChevronRight, ExternalLink, ShoppingBag,
 } from 'lucide-react';
 import { api } from '../lib/api';
 
@@ -15,6 +15,7 @@ const navItems = [
   { path: '/admin/fashion', label: 'Fashion', icon: Shirt },
   { path: '/admin/subscribers', label: 'Subscribers', icon: Users },
   { path: '/admin/content', label: 'Site Content', icon: Globe },
+  { path: '/admin/shop', label: 'Shop', icon: ShoppingBag },
   { path: '/admin/settings', label: 'Settings', icon: Settings },
 ];
 
