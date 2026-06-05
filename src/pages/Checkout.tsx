@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { ArrowLeft, ShoppingBag, CreditCard, Check, Loader2 } from 'lucide-react';
+import { ArrowLeft, ShoppingBag, CreditCard, Check, Loader2, AlertCircle } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { useCart } from '../context/CartContext';
@@ -10,8 +10,19 @@ const stripePromise = import.meta.env.VITE_STRIPE_PUBLIC_KEY
   ? loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY)
   : null;
 
-// ─── Stripe Payment Form ─────────────────────────────────────────────────────
-function StripeForm({ onSuccess }: { onSuccess: (ref: string) => void }) {
+// ─── Form validation ─────────────────────────────────────────────────────────
+function validateEmail(email: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+function validateForm(form: { name: string; email: string }) {
+  const errors: Record<string, string> = {};
+  if (!form.name.trim() || form.name.trim().length < 2) errors.name = 'Name must be at least 2 characters';
+  if (!form.email.trim() || !validateEmail(form.email)) errors.email = 'Enter a valid email address';
+  return errors;
+}
+
+// ─── Stripe Payment Form ──────────────────────────────────────────────────────
+function StripeForm({ onSuccess }: { onSuccess: (paymentIntentId: string) => Promise<void> }) {
   const stripe = useStripe();
   const elements = useElements();
   const [error, setError] = useState('');
@@ -21,19 +32,30 @@ function StripeForm({ onSuccess }: { onSuccess: (ref: string) => void }) {
     e.preventDefault();
     if (!stripe || !elements) return;
     setProcessing(true);
-    const { error: stripeError, paymentIntent } = await stripe.confirmPayment({
-      elements,
-      redirect: 'if_required',
-    });
-    if (stripeError) { setError(stripeError.message || 'Payment failed'); setProcessing(false); return; }
-    if (paymentIntent?.status === 'succeeded') onSuccess(paymentIntent.id);
-    setProcessing(false);
+    setError('');
+    try {
+      const { error: stripeError, paymentIntent } = await stripe.confirmPayment({
+        elements,
+        redirect: 'if_required',
+      });
+      if (stripeError) { setError(stripeError.message || 'Payment failed'); return; }
+      if (paymentIntent?.status === 'succeeded') await onSuccess(paymentIntent.id);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Payment failed');
+    } finally {
+      setProcessing(false);
+    }
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <PaymentElement />
-      {error && <p className="text-red-500 text-sm">{error}</p>}
+      {error && (
+        <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600">
+          <AlertCircle size={16} className="flex-shrink-0 mt-0.5" />
+          {error}
+        </div>
+      )}
       <button type="submit" disabled={processing || !stripe}
         className="w-full py-4 bg-[#0d9488] text-white rounded-2xl font-bold hover:bg-[#0f766e] transition-colors flex items-center justify-center gap-2 disabled:opacity-60">
         {processing ? <Loader2 size={18} className="animate-spin" /> : <CreditCard size={18} />}
@@ -50,73 +72,122 @@ export default function Checkout() {
   const [step, setStep] = useState<'info' | 'payment' | 'success'>('info');
   const [method, setMethod] = useState<'paystack' | 'stripe'>('paystack');
   const [clientSecret, setClientSecret] = useState('');
+  const [serverTotal, setServerTotal] = useState(total);
   const [processing, setProcessing] = useState(false);
+  const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [form, setForm] = useState({ name: '', email: '', phone: '' });
+  const [completedOrder, setCompletedOrder] = useState<{ id: number } | null>(null);
 
   useEffect(() => { window.scrollTo(0, 0); }, []);
-  useEffect(() => { if (items.length === 0 && step !== 'success') navigate('/shop'); }, [items]);
+
+  // Redirect if cart is empty (and not on success screen)
+  useEffect(() => {
+    if (items.length === 0 && step !== 'success') navigate('/shop');
+  }, [items, step, navigate]);
 
   const field = (key: keyof typeof form) => ({
     value: form[key],
-    onChange: (e: React.ChangeEvent<HTMLInputElement>) => setForm({ ...form, [key]: e.target.value }),
+    onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
+      setForm({ ...form, [key]: e.target.value });
+      if (fieldErrors[key]) setFieldErrors({ ...fieldErrors, [key]: '' });
+    },
   });
 
   const proceedToPayment = async () => {
-    if (!form.name || !form.email) return;
-    if (method === 'stripe' && stripePromise) {
-      setProcessing(true);
-      try {
-        const { clientSecret: cs } = await api.createPaymentIntent(total);
+    const errors = validateForm(form);
+    if (Object.keys(errors).length > 0) { setFieldErrors(errors); return; }
+    setError('');
+    setProcessing(true);
+    try {
+      if (method === 'stripe' && stripePromise) {
+        const cartItems = items.map((i) => ({ id: i.id, qty: i.qty }));
+        const { clientSecret: cs, total: st } = await api.createPaymentIntent(cartItems);
         setClientSecret(cs);
-      } catch { alert('Failed to initialize payment.'); setProcessing(false); return; }
+        setServerTotal(st);
+      }
+      setStep('payment');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to initialize payment');
+    } finally {
       setProcessing(false);
     }
-    setStep('payment');
   };
 
-  const saveOrder = async (paymentRef: string) => {
-    await api.createOrder({
-      items,
-      subtotal: total,
-      total,
-      customerName: form.name,
-      customerEmail: form.email,
-      customerPhone: form.phone,
-      paymentMethod: method,
-      paymentRef,
-    });
-    clearCart();
-    setStep('success');
-  };
-
-  // Paystack handler
-  const payWithPaystack = () => {
-    const paystackKey = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY;
-    if (!paystackKey) { alert('Paystack is not configured.'); return; }
-    const handler = (window as unknown as { PaystackPop: { setup: (config: Record<string, unknown>) => { openIframe: () => void } } }).PaystackPop.setup({
-      key: paystackKey,
-      email: form.email,
-      amount: total * 100,
-      currency: 'NGN',
-      ref: `SML-${Date.now()}`,
-      metadata: { custom_fields: [{ display_name: 'Customer', variable_name: 'customer', value: form.name }] },
-      callback: (response: { reference: string }) => saveOrder(response.reference),
-      onClose: () => {},
-    });
-    handler.openIframe();
+  const onStripeSuccess = async (paymentIntentId: string) => {
+    setProcessing(true);
+    setError('');
+    try {
+      const order = await api.verifyStripe({
+        paymentIntentId,
+        items: items.map((i) => ({ id: i.id, qty: i.qty })),
+        customerName: form.name,
+        customerEmail: form.email,
+        customerPhone: form.phone || undefined,
+      });
+      setCompletedOrder(order);
+      clearCart();
+      setStep('success');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to confirm order');
+    } finally {
+      setProcessing(false);
+    }
   };
 
   // Load Paystack script
   useEffect(() => {
-    if (method === 'paystack' && !document.getElementById('paystack-script')) {
+    if (!document.getElementById('paystack-script')) {
       const script = document.createElement('script');
       script.id = 'paystack-script';
       script.src = 'https://js.paystack.co/v1/inline.js';
       document.body.appendChild(script);
     }
-  }, [method]);
+  }, []);
 
-  // ── Success ────────────────────────────────────────────────────────────────
+  const payWithPaystack = () => {
+    const paystackKey = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY;
+    if (!paystackKey) { setError('Paystack is not configured. Please use Stripe or contact support.'); return; }
+
+    type PaystackHandler = { openIframe: () => void };
+    type PaystackPop = { setup: (config: Record<string, unknown>) => PaystackHandler };
+    const PaystackPop = (window as unknown as { PaystackPop: PaystackPop }).PaystackPop;
+
+    if (!PaystackPop) { setError('Paystack failed to load. Please refresh and try again.'); return; }
+
+    const handler = PaystackPop.setup({
+      key: paystackKey,
+      email: form.email,
+      amount: Math.round(total * 100), // in kobo
+      currency: 'NGN',
+      ref: `SML-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      metadata: { custom_fields: [{ display_name: 'Customer', variable_name: 'customer', value: form.name }] },
+      callback: async (response: { reference: string }) => {
+        setProcessing(true);
+        setError('');
+        try {
+          const order = await api.verifyPaystack({
+            reference: response.reference,
+            items: items.map((i) => ({ id: i.id, qty: i.qty })),
+            customerName: form.name,
+            customerEmail: form.email,
+            customerPhone: form.phone || undefined,
+          });
+          setCompletedOrder(order);
+          clearCart();
+          setStep('success');
+        } catch (err) {
+          setError(err instanceof Error ? err.message : 'Payment verification failed. Please contact support.');
+        } finally {
+          setProcessing(false);
+        }
+      },
+      onClose: () => {},
+    });
+    handler.openIframe();
+  };
+
+  // ── Success ─────────────────────────────────────────────────────────────────
   if (step === 'success') return (
     <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center p-4">
       <div className="bg-white rounded-3xl p-10 max-w-md w-full text-center shadow-xl border border-gray-100">
@@ -124,8 +195,11 @@ export default function Checkout() {
           <Check size={36} className="text-[#0d9488]" />
         </div>
         <h2 className="text-2xl font-black text-[#0f172a] mb-2">Order Confirmed!</h2>
+        {completedOrder && <p className="text-[#0d9488] font-semibold mb-1">Order #{completedOrder.id}</p>}
         <p className="text-[#64748b] mb-2">Thank you, <strong>{form.name}</strong>!</p>
-        <p className="text-[#64748b] text-sm mb-8">A confirmation will be sent to <strong>{form.email}</strong>.</p>
+        <p className="text-[#64748b] text-sm mb-8">
+          A confirmation email has been sent to <strong>{form.email}</strong>.
+        </p>
         <button onClick={() => navigate('/shop')}
           className="w-full py-3.5 bg-[#0d9488] text-white rounded-2xl font-bold hover:bg-[#0f766e] transition-colors">
           Continue Shopping
@@ -144,34 +218,64 @@ export default function Checkout() {
             <ArrowLeft size={20} />
           </button>
           <h1 className="font-bold text-lg">Checkout</h1>
+          {/* Step indicator */}
+          <div className="ml-auto flex items-center gap-2 text-xs">
+            <span className={`px-2 py-1 rounded-full font-semibold ${step === 'info' ? 'bg-[#0d9488] text-white' : 'bg-white/20 text-white/60'}`}>1. Details</span>
+            <span className="text-white/30">→</span>
+            <span className={`px-2 py-1 rounded-full font-semibold ${step === 'payment' ? 'bg-[#0d9488] text-white' : 'bg-white/20 text-white/60'}`}>2. Payment</span>
+          </div>
         </div>
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-8 grid lg:grid-cols-5 gap-8">
-        {/* Left: Form */}
+        {/* Left: Form / Payment */}
         <div className="lg:col-span-3 space-y-5">
+
+          {/* Global error */}
+          {error && (
+            <div className="flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-2xl text-sm text-red-600">
+              <AlertCircle size={18} className="flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="font-semibold">Something went wrong</p>
+                <p className="mt-0.5">{error}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Step 1: Info */}
           {step === 'info' && (
             <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm">
               <h2 className="font-bold text-[#0f172a] text-lg mb-5">Contact Information</h2>
               <div className="space-y-4">
                 {[
-                  { label: 'Full Name', key: 'name' as const, placeholder: 'John Doe', type: 'text' },
-                  { label: 'Email Address', key: 'email' as const, placeholder: 'john@example.com', type: 'email' },
-                  { label: 'Phone Number', key: 'phone' as const, placeholder: '+234 800 000 0000', type: 'tel' },
+                  { label: 'Full Name', key: 'name' as const, placeholder: 'John Doe', type: 'text', required: true },
+                  { label: 'Email Address', key: 'email' as const, placeholder: 'john@example.com', type: 'email', required: true },
+                  { label: 'Phone Number', key: 'phone' as const, placeholder: '+234 800 000 0000', type: 'tel', required: false },
                 ].map((f) => (
                   <div key={f.key}>
-                    <label className="block text-sm font-semibold text-[#0f172a] mb-1.5">{f.label} {f.key !== 'phone' && <span className="text-red-400">*</span>}</label>
+                    <label className="block text-sm font-semibold text-[#0f172a] mb-1.5">
+                      {f.label} {f.required && <span className="text-red-400">*</span>}
+                    </label>
                     <input type={f.type} placeholder={f.placeholder} {...field(f.key)}
-                      className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#0d9488] focus:outline-none text-sm transition-all" />
+                      className={`w-full px-4 py-3 rounded-xl border-2 focus:outline-none text-sm transition-all ${
+                        fieldErrors[f.key]
+                          ? 'border-red-300 focus:border-red-400 bg-red-50'
+                          : 'border-gray-200 focus:border-[#0d9488]'
+                      }`} />
+                    {fieldErrors[f.key] && (
+                      <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
+                        <AlertCircle size={11} /> {fieldErrors[f.key]}
+                      </p>
+                    )}
                   </div>
                 ))}
               </div>
 
               {/* Payment Method */}
-              <h2 className="font-bold text-[#0f172a] text-lg mt-6 mb-4">Payment Method</h2>
+              <h2 className="font-bold text-[#0f172a] text-lg mt-7 mb-4">Payment Method</h2>
               <div className="grid grid-cols-2 gap-3">
                 {[
-                  { key: 'paystack' as const, label: 'Paystack', sub: 'Pay with card, bank transfer, USSD' },
+                  { key: 'paystack' as const, label: 'Paystack', sub: 'Card, bank transfer, USSD (NGN)' },
                   { key: 'stripe' as const, label: 'Stripe', sub: 'International card payment' },
                 ].map((m) => (
                   <button key={m.key} onClick={() => setMethod(m.key)}
@@ -183,28 +287,40 @@ export default function Checkout() {
                 ))}
               </div>
 
-              <button onClick={proceedToPayment} disabled={!form.name || !form.email || processing}
-                className="mt-6 w-full py-4 bg-[#0d9488] text-white rounded-2xl font-bold hover:bg-[#0f766e] transition-colors flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed">
+              <button onClick={proceedToPayment} disabled={processing}
+                className="mt-6 w-full py-4 bg-[#0d9488] text-white rounded-2xl font-bold hover:bg-[#0f766e] transition-colors flex items-center justify-center gap-2 disabled:opacity-60">
                 {processing ? <Loader2 size={18} className="animate-spin" /> : null}
-                Continue to Payment
+                {processing ? 'Preparing payment...' : 'Continue to Payment'}
               </button>
             </div>
           )}
 
+          {/* Step 2: Payment */}
           {step === 'payment' && (
             <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm">
-              <h2 className="font-bold text-[#0f172a] text-lg mb-5">Complete Payment</h2>
-              {method === 'paystack' ? (
+              <h2 className="font-bold text-[#0f172a] text-lg mb-2">Complete Payment</h2>
+              <p className="text-[#64748b] text-sm mb-5">Paying as <strong>{form.name}</strong> ({form.email})</p>
+
+              {processing && (
+                <div className="flex items-center justify-center gap-3 py-8 text-[#64748b]">
+                  <Loader2 size={20} className="animate-spin text-[#0d9488]" />
+                  <span className="text-sm font-medium">Verifying payment...</span>
+                </div>
+              )}
+
+              {!processing && method === 'paystack' && (
                 <button onClick={payWithPaystack}
                   className="w-full py-4 bg-[#0d9488] text-white rounded-2xl font-bold hover:bg-[#0f766e] transition-colors flex items-center justify-center gap-2 text-base">
                   <CreditCard size={18} /> Pay ₦{total.toLocaleString()} with Paystack
                 </button>
-              ) : clientSecret && stripePromise ? (
+              )}
+
+              {!processing && method === 'stripe' && clientSecret && stripePromise ? (
                 <Elements stripe={stripePromise} options={{ clientSecret, appearance: { theme: 'stripe', variables: { colorPrimary: '#0d9488' } } }}>
-                  <StripeForm onSuccess={saveOrder} />
+                  <StripeForm onSuccess={onStripeSuccess} />
                 </Elements>
-              ) : (
-                <p className="text-[#64748b] text-sm">Stripe is not configured. Please use Paystack.</p>
+              ) : !processing && method === 'stripe' && (
+                <p className="text-[#64748b] text-sm text-center py-4">Stripe is not configured. Please use Paystack.</p>
               )}
             </div>
           )}
@@ -213,7 +329,9 @@ export default function Checkout() {
         {/* Right: Order Summary */}
         <div className="lg:col-span-2">
           <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm sticky top-6">
-            <h2 className="font-bold text-[#0f172a] mb-4 flex items-center gap-2"><ShoppingBag size={18} className="text-[#0d9488]" /> Order Summary</h2>
+            <h2 className="font-bold text-[#0f172a] mb-4 flex items-center gap-2">
+              <ShoppingBag size={18} className="text-[#0d9488]" /> Order Summary
+            </h2>
             <div className="space-y-3 mb-4 max-h-60 overflow-y-auto">
               {items.map((item) => (
                 <div key={item.id} className="flex gap-3">
@@ -229,8 +347,14 @@ export default function Checkout() {
             <div className="border-t border-gray-100 pt-4 space-y-2">
               <div className="flex justify-between text-sm text-[#64748b]"><span>Subtotal</span><span>₦{total.toLocaleString()}</span></div>
               <div className="flex justify-between text-sm text-[#64748b]"><span>Shipping</span><span className="text-green-600 font-semibold">Free</span></div>
-              <div className="flex justify-between font-bold text-[#0f172a] text-lg border-t border-gray-100 pt-2 mt-2">
-                <span>Total</span><span className="text-[#0d9488]">₦{total.toLocaleString()}</span>
+              {step === 'payment' && method === 'stripe' && serverTotal !== total && (
+                <div className="flex justify-between text-xs text-[#64748b] bg-yellow-50 rounded-lg px-2 py-1">
+                  <span>Verified total</span><span className="font-semibold text-[#0f172a]">₦{serverTotal.toLocaleString()}</span>
+                </div>
+              )}
+              <div className="flex justify-between font-bold text-[#0f172a] text-lg border-t border-gray-100 pt-2">
+                <span>Total</span>
+                <span className="text-[#0d9488]">₦{(step === 'payment' && method === 'stripe' ? serverTotal : total).toLocaleString()}</span>
               </div>
             </div>
           </div>

@@ -117,19 +117,38 @@ export const api = {
     return request(`/shop/products${q}`);
   },
   getProduct: (id: number) => request(`/shop/products/${id}`),
-  submitRsvpShop: (eventId: number, data: object) =>
-    request(`/events/${eventId}/rsvp`, { method: 'POST', body: JSON.stringify(data) }),
-  createOrder: (data: object) =>
-    request('/shop/orders', { method: 'POST', body: JSON.stringify(data) }),
-  createPaymentIntent: (amount: number) =>
-    request('/shop/create-payment-intent', { method: 'POST', body: JSON.stringify({ amount }) }),
+
+  // Create Stripe payment intent (sends items, gets server-calculated total + clientSecret)
+  createPaymentIntent: (items: { id: number; qty: number }[], currency = 'usd') =>
+    request('/shop/create-payment-intent', { method: 'POST', body: JSON.stringify({ items, currency }) }),
+
+  // Verify Paystack payment server-side and create order
+  verifyPaystack: (data: {
+    reference: string;
+    items: { id: number; qty: number }[];
+    customerName: string;
+    customerEmail: string;
+    customerPhone?: string;
+  }) => request('/shop/verify-paystack', { method: 'POST', body: JSON.stringify(data) }),
+
+  // Verify Stripe payment server-side and create order
+  verifyStripe: (data: {
+    paymentIntentId: string;
+    items: { id: number; qty: number }[];
+    customerName: string;
+    customerEmail: string;
+    customerPhone?: string;
+  }) => request('/shop/verify-stripe', { method: 'POST', body: JSON.stringify(data) }),
 
   // Shop — admin
   getAllProducts: () => request('/shop/products'),
   createProduct: (data: object) => request('/shop/products', { method: 'POST', body: JSON.stringify(data) }),
   updateProduct: (id: number, data: object) => request(`/shop/products/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
   deleteProduct: (id: number) => request(`/shop/products/${id}`, { method: 'DELETE' }),
-  getOrders: () => request('/shop/orders'),
+  getOrders: (params?: { limit?: number; skip?: number }) => {
+    const q = params ? '?' + new URLSearchParams(Object.entries(params).map(([k, v]) => [k, String(v)])).toString() : '';
+    return request(`/shop/orders${q}`);
+  },
   updateOrder: (id: number, data: object) => request(`/shop/orders/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
 
   // Fashion inquiries

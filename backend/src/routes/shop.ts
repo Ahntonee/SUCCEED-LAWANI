@@ -1,4 +1,6 @@
 import { Router, Request, Response } from 'express';
+import { z } from 'zod';
+import rateLimit from 'express-rate-limit';
 import prisma from '../db/prisma';
 import { requireAuth } from '../middleware/auth';
 import Stripe from 'stripe';
@@ -10,7 +12,43 @@ const stripe = process.env.STRIPE_SECRET_KEY
   ? new Stripe(process.env.STRIPE_SECRET_KEY)
   : null;
 
-// ─── Helpers ────────────────────────────────────────────────────────────────
+// ─── Rate Limits ─────────────────────────────────────────────────────────────
+const paymentLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  message: { error: 'Too many payment requests. Please slow down.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// ─── Zod Schemas ─────────────────────────────────────────────────────────────
+const customerSchema = z.object({
+  customerName: z.string().min(2).max(100).trim(),
+  customerEmail: z.string().email().toLowerCase().trim(),
+  customerPhone: z.string().max(20).trim().optional().default(''),
+});
+
+const cartItemSchema = z.object({
+  id: z.number().int().positive(),
+  qty: z.number().int().positive().max(100),
+});
+
+const paystackVerifySchema = customerSchema.extend({
+  reference: z.string().min(1).max(100).trim(),
+  items: z.array(cartItemSchema).min(1).max(50),
+});
+
+const stripeVerifySchema = customerSchema.extend({
+  paymentIntentId: z.string().min(1).trim(),
+  items: z.array(cartItemSchema).min(1).max(50),
+});
+
+const paymentIntentSchema = z.object({
+  items: z.array(cartItemSchema).min(1).max(50),
+  currency: z.string().length(3).default('usd'),
+});
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 function parseList(raw: string): string[] {
   return raw ? raw.split(',').map((s) => s.trim()).filter(Boolean) : [];
 }
@@ -23,102 +61,289 @@ function withParsed<T extends { images: string; tags: string }>(p: T) {
   return { ...p, images: parseList(p.images), tags: parseList(p.tags) };
 }
 
-// ─── PUBLIC: Products ────────────────────────────────────────────────────────
+// Calculate server-side total from DB prices
+async function calcServerTotal(items: { id: number; qty: number }[]) {
+  const ids = items.map((i) => i.id);
+  const products = await prisma.product.findMany({
+    where: { id: { in: ids }, status: 'active' },
+    select: { id: true, name: true, price: true, images: true, stock: true },
+  });
+
+  let total = 0;
+  const enrichedItems: { id: number; name: string; price: number; qty: number; image: string }[] = [];
+
+  for (const item of items) {
+    const product = products.find((p) => p.id === item.id);
+    if (!product) throw new Error(`Product ${item.id} not found or unavailable`);
+    if (product.stock < item.qty) throw new Error(`Insufficient stock for "${product.name}"`);
+    total += product.price * item.qty;
+    enrichedItems.push({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      qty: item.qty,
+      image: product.images.split(',')[0]?.trim() || '',
+    });
+  }
+
+  return { total, enrichedItems };
+}
+
+// Fire-and-forget email with admin alert on failure
+function sendEmailSafe(data: Parameters<typeof sendOrderConfirmation>[0]) {
+  sendOrderConfirmation(data).catch((err) => {
+    console.error(`❌ Order #${data.orderId} email failed for ${data.customerEmail}:`, err.message);
+    // TODO: hook into a monitoring/alerting service here
+  });
+}
+
+// ─── PUBLIC: Products ─────────────────────────────────────────────────────────
 router.get('/products', async (req: Request, res: Response) => {
-  const { tag, category, search } = req.query;
-  const where: Record<string, unknown> = { status: 'active' };
-  if (category) where.category = String(category);
-  if (tag) where.tags = { contains: String(tag) };
-  if (search) where.name = { contains: String(search), mode: 'insensitive' };
-  const products = await prisma.product.findMany({ where, orderBy: { createdAt: 'desc' } });
-  res.json(products.map(withParsed));
+  try {
+    const { tag, category, search } = req.query;
+    const where: Record<string, unknown> = { status: 'active' };
+    if (category) where.category = String(category);
+    if (tag) where.tags = { contains: String(tag) };
+    if (search) where.name = { contains: String(search), mode: 'insensitive' };
+    const products = await prisma.product.findMany({ where, orderBy: { createdAt: 'desc' } });
+    res.json(products.map(withParsed));
+  } catch {
+    res.status(500).json({ error: 'Failed to load products' });
+  }
 });
 
 router.get('/products/:id', async (req: Request, res: Response) => {
-  const product = await prisma.product.findUnique({ where: { id: Number(req.params.id) } });
-  if (!product) { res.status(404).json({ error: 'Not found' }); return; }
-  res.json(withParsed(product));
+  try {
+    const id = Number(req.params.id);
+    if (isNaN(id)) { res.status(400).json({ error: 'Invalid product ID' }); return; }
+    const product = await prisma.product.findUnique({ where: { id } });
+    if (!product) { res.status(404).json({ error: 'Not found' }); return; }
+    res.json(withParsed(product));
+  } catch {
+    res.status(500).json({ error: 'Failed to load product' });
+  }
 });
 
-// ─── ADMIN: Products ─────────────────────────────────────────────────────────
+// ─── ADMIN: Products ──────────────────────────────────────────────────────────
 router.post('/products', requireAuth, async (req: Request, res: Response) => {
-  const { images, tags, ...rest } = req.body;
-  const product = await prisma.product.create({
-    data: { ...rest, images: serializeList(images), tags: serializeList(tags) },
-  });
-  res.status(201).json(withParsed(product));
+  try {
+    const { images, tags, ...rest } = req.body;
+    const product = await prisma.product.create({
+      data: { ...rest, images: serializeList(images), tags: serializeList(tags) },
+    });
+    res.status(201).json(withParsed(product));
+  } catch (err) {
+    console.error('Create product error:', err);
+    res.status(500).json({ error: 'Failed to create product' });
+  }
 });
 
 router.patch('/products/:id', requireAuth, async (req: Request, res: Response) => {
-  const { images, tags, ...rest } = req.body;
-  const data: Record<string, unknown> = { ...rest };
-  if (images !== undefined) data.images = serializeList(images);
-  if (tags !== undefined) data.tags = serializeList(tags);
-  const product = await prisma.product.update({ where: { id: Number(req.params.id) }, data });
-  res.json(withParsed(product));
+  try {
+    const { images, tags, ...rest } = req.body;
+    const data: Record<string, unknown> = { ...rest };
+    if (images !== undefined) data.images = serializeList(images);
+    if (tags !== undefined) data.tags = serializeList(tags);
+    const product = await prisma.product.update({ where: { id: Number(req.params.id) }, data });
+    res.json(withParsed(product));
+  } catch {
+    res.status(500).json({ error: 'Failed to update product' });
+  }
 });
 
 router.delete('/products/:id', requireAuth, async (req: Request, res: Response) => {
-  await prisma.product.delete({ where: { id: Number(req.params.id) } });
-  res.json({ success: true });
+  try {
+    await prisma.product.delete({ where: { id: Number(req.params.id) } });
+    res.json({ success: true });
+  } catch {
+    res.status(500).json({ error: 'Failed to delete product' });
+  }
 });
 
-// ─── PUBLIC: Orders ───────────────────────────────────────────────────────────
-router.post('/orders', async (req: Request, res: Response) => {
-  const { items, subtotal, total, customerName, customerEmail, customerPhone, paymentMethod, paymentRef } = req.body;
-  const order = await prisma.order.create({
-    data: {
-      items: typeof items === 'string' ? items : JSON.stringify(items),
-      subtotal: Number(subtotal),
-      total: Number(total),
-      customerName,
-      customerEmail,
-      customerPhone: customerPhone || '',
-      paymentMethod,
-      paymentRef: paymentRef || '',
-      status: paymentRef ? 'paid' : 'pending',
-    },
-  });
-
-  // Send confirmation email (non-blocking)
-  const parsedItems = JSON.parse(order.items);
-  sendOrderConfirmation({
-    orderId: order.id,
-    customerName: order.customerName,
-    customerEmail: order.customerEmail,
-    items: parsedItems,
-    total: order.total,
-    paymentMethod: order.paymentMethod,
-    paymentRef: order.paymentRef,
-  }).catch((err) => console.error('Email error:', err));
-
-  res.status(201).json({ ...order, items: parsedItems });
-});
-
-// ─── ADMIN: Orders ────────────────────────────────────────────────────────────
-router.get('/orders', requireAuth, async (_req: Request, res: Response) => {
-  const orders = await prisma.order.findMany({ orderBy: { createdAt: 'desc' } });
-  res.json(orders.map((o) => ({ ...o, items: JSON.parse(o.items) })));
+// ─── ADMIN: Orders (paginated) ────────────────────────────────────────────────
+router.get('/orders', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const limit = Math.min(Number(req.query.limit) || 50, 100);
+    const skip = Number(req.query.skip) || 0;
+    const [orders, total] = await Promise.all([
+      prisma.order.findMany({ orderBy: { createdAt: 'desc' }, take: limit, skip }),
+      prisma.order.count(),
+    ]);
+    res.json({
+      orders: orders.map((o) => ({ ...o, items: JSON.parse(o.items) })),
+      total,
+      limit,
+      skip,
+    });
+  } catch {
+    res.status(500).json({ error: 'Failed to load orders' });
+  }
 });
 
 router.patch('/orders/:id', requireAuth, async (req: Request, res: Response) => {
-  const order = await prisma.order.update({
-    where: { id: Number(req.params.id) },
-    data: req.body,
-  });
-  res.json({ ...order, items: JSON.parse(order.items) });
+  try {
+    // Only allow updating safe fields (no overwriting items or payment data)
+    const { status } = req.body;
+    const order = await prisma.order.update({
+      where: { id: Number(req.params.id) },
+      data: { status },
+    });
+    res.json({ ...order, items: JSON.parse(order.items) });
+  } catch {
+    res.status(500).json({ error: 'Failed to update order' });
+  }
 });
 
-// ─── Stripe: Create Payment Intent ───────────────────────────────────────────
-router.post('/create-payment-intent', async (req: Request, res: Response) => {
-  if (!stripe) { res.status(500).json({ error: 'Stripe not configured' }); return; }
-  const { amount, currency = 'usd' } = req.body;
-  const paymentIntent = await stripe.paymentIntents.create({
-    amount: Math.round(Number(amount) * 100),
-    currency,
-    automatic_payment_methods: { enabled: true },
-  });
-  res.json({ clientSecret: paymentIntent.client_secret });
+// ─── PAYMENT: Stripe — Create Intent (server-side amount) ────────────────────
+router.post('/create-payment-intent', paymentLimiter, async (req: Request, res: Response) => {
+  try {
+    if (!stripe) { res.status(503).json({ error: 'Stripe is not configured' }); return; }
+
+    const parsed = paymentIntentSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: 'Invalid request', details: parsed.error.flatten() });
+      return;
+    }
+
+    const { items, currency } = parsed.data;
+    const { total } = await calcServerTotal(items);
+
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: Math.round(total * 100), // server-calculated, not client-provided
+      currency,
+      automatic_payment_methods: { enabled: true },
+      metadata: { items: JSON.stringify(items) },
+    });
+
+    res.json({ clientSecret: paymentIntent.client_secret, total });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'Payment setup failed';
+    res.status(400).json({ error: msg });
+  }
+});
+
+// ─── PAYMENT: Stripe — Verify & Create Order ─────────────────────────────────
+router.post('/verify-stripe', paymentLimiter, async (req: Request, res: Response) => {
+  try {
+    if (!stripe) { res.status(503).json({ error: 'Stripe is not configured' }); return; }
+
+    const parsed = stripeVerifySchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: 'Invalid request', details: parsed.error.flatten() });
+      return;
+    }
+
+    const { paymentIntentId, items, customerName, customerEmail, customerPhone } = parsed.data;
+
+    // Verify payment intent with Stripe
+    const intent = await stripe.paymentIntents.retrieve(paymentIntentId);
+    if (intent.status !== 'succeeded') {
+      res.status(400).json({ error: 'Payment has not succeeded' });
+      return;
+    }
+
+    // Prevent duplicate orders for same payment intent
+    const existing = await prisma.order.findFirst({ where: { paymentRef: paymentIntentId } });
+    if (existing) {
+      res.json({ ...existing, items: JSON.parse(existing.items) });
+      return;
+    }
+
+    // Recalculate total from DB (never trust client)
+    const { total, enrichedItems } = await calcServerTotal(items);
+
+    const order = await prisma.order.create({
+      data: {
+        items: JSON.stringify(enrichedItems),
+        subtotal: total,
+        total,
+        customerName,
+        customerEmail,
+        customerPhone,
+        paymentMethod: 'stripe',
+        paymentRef: paymentIntentId,
+        status: 'paid',
+      },
+    });
+
+    sendEmailSafe({ orderId: order.id, customerName, customerEmail, items: enrichedItems, total, paymentMethod: 'stripe', paymentRef: paymentIntentId });
+
+    res.status(201).json({ ...order, items: enrichedItems });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'Order creation failed';
+    console.error('Stripe verify error:', msg);
+    res.status(400).json({ error: msg });
+  }
+});
+
+// ─── PAYMENT: Paystack — Verify & Create Order ───────────────────────────────
+router.post('/verify-paystack', paymentLimiter, async (req: Request, res: Response) => {
+  try {
+    const parsed = paystackVerifySchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: 'Invalid request', details: parsed.error.flatten() });
+      return;
+    }
+
+    const { reference, items, customerName, customerEmail, customerPhone } = parsed.data;
+
+    const paystackSecret = process.env.PAYSTACK_SECRET_KEY;
+    if (!paystackSecret) {
+      res.status(503).json({ error: 'Paystack is not configured on the server' });
+      return;
+    }
+
+    // Prevent duplicate orders for same reference
+    const existing = await prisma.order.findFirst({ where: { paymentRef: reference } });
+    if (existing) {
+      res.json({ ...existing, items: JSON.parse(existing.items) });
+      return;
+    }
+
+    // Verify with Paystack API (server-side — cannot be faked)
+    const verifyRes = await fetch(`https://api.paystack.co/transaction/verify/${encodeURIComponent(reference)}`, {
+      headers: { Authorization: `Bearer ${paystackSecret}` },
+    });
+    const verifyData = await verifyRes.json() as { status: boolean; data?: { status: string; amount: number; email: string } };
+
+    if (!verifyData.status || verifyData.data?.status !== 'success') {
+      res.status(400).json({ error: 'Payment verification failed. Transaction not successful.' });
+      return;
+    }
+
+    // Calculate total from DB (never trust client prices)
+    const { total, enrichedItems } = await calcServerTotal(items);
+
+    // Verify amount paid matches expected total (Paystack amount is in kobo)
+    const paidNaira = (verifyData.data?.amount ?? 0) / 100;
+    if (Math.abs(paidNaira - total) > 1) {
+      console.error(`Amount mismatch: paid ₦${paidNaira}, expected ₦${total} for ref ${reference}`);
+      res.status(400).json({ error: 'Payment amount does not match order total.' });
+      return;
+    }
+
+    const order = await prisma.order.create({
+      data: {
+        items: JSON.stringify(enrichedItems),
+        subtotal: total,
+        total,
+        customerName,
+        customerEmail,
+        customerPhone,
+        paymentMethod: 'paystack',
+        paymentRef: reference,
+        status: 'paid',
+      },
+    });
+
+    sendEmailSafe({ orderId: order.id, customerName, customerEmail, items: enrichedItems, total, paymentMethod: 'paystack', paymentRef: reference });
+
+    res.status(201).json({ ...order, items: enrichedItems });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'Order creation failed';
+    console.error('Paystack verify error:', msg);
+    res.status(400).json({ error: msg });
+  }
 });
 
 export default router;

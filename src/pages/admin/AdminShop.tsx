@@ -35,7 +35,7 @@ export default function AdminShop() {
 
   const load = () => {
     api.getAllProducts().then(setProducts).catch(console.error);
-    api.getOrders().then(setOrders).catch(console.error);
+    api.getOrders({ limit: 100 }).then((res) => setOrders(res.orders ?? res)).catch(console.error);
   };
   useEffect(load, []);
 
