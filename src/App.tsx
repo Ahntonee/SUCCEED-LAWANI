@@ -8,6 +8,7 @@ import Contact from './pages/Contact'
 import Shop from './pages/Shop'
 import ProductDetail from './pages/ProductDetail'
 import Checkout from './pages/Checkout'
+
 import AdminLogin from './pages/admin/AdminLogin'
 import AdminLayout from './layouts/AdminLayout'
 import AdminDashboard from './pages/admin/AdminDashboard'
@@ -34,10 +35,10 @@ export default function App() {
         <Route path="/music" element={<Music />} />
         <Route path="/contact" element={<Contact />} />
 
-        {/* Shop */}
+        {/* Shop — checkout MUST come before /:id to avoid route shadowing */}
         <Route path="/shop" element={<Shop />} />
-        <Route path="/shop/:id" element={<ProductDetail />} />
         <Route path="/shop/checkout" element={<Checkout />} />
+        <Route path="/shop/:id" element={<ProductDetail />} />
 
         {/* Admin */}
         <Route path="/admin/login" element={<AdminLogin />} />

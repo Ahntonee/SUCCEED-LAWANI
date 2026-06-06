@@ -35,7 +35,9 @@ export default function AdminShop() {
 
   const load = () => {
     api.getAllProducts().then(setProducts).catch(console.error);
-    api.getOrders({ limit: 100 }).then((res) => setOrders(res.orders ?? res)).catch(console.error);
+    api.getOrders({ limit: 100 })
+      .then((res) => setOrders(Array.isArray(res) ? res : (res.orders ?? [])))
+      .catch(console.error);
   };
   useEffect(load, []);
 
@@ -43,6 +45,9 @@ export default function AdminShop() {
   const openEdit = (p: Product) => setModal({ open: true, data: { ...p } });
 
   const save = async () => {
+    if (!modal.data.name?.trim()) { alert('Product name is required'); return; }
+    if (!modal.data.price || modal.data.price <= 0) { alert('A valid price is required'); return; }
+    if ((modal.data.images || []).length < 1) { alert('Please upload at least 1 product image'); return; }
     setSaving(true);
     try {
       if (modal.data.id) await api.updateProduct(modal.data.id, modal.data);

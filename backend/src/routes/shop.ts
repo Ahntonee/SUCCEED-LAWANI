@@ -3,14 +3,10 @@ import { z } from 'zod';
 import rateLimit from 'express-rate-limit';
 import prisma from '../db/prisma';
 import { requireAuth } from '../middleware/auth';
-import Stripe from 'stripe';
 import { sendOrderConfirmation } from '../services/email';
+import { wrapAsync } from '../utils/wrapAsync';
 
 const router = Router();
-
-const stripe = process.env.STRIPE_SECRET_KEY
-  ? new Stripe(process.env.STRIPE_SECRET_KEY)
-  : null;
 
 // ─── Rate Limits ─────────────────────────────────────────────────────────────
 const paymentLimiter = rateLimit({
@@ -38,14 +34,9 @@ const paystackVerifySchema = customerSchema.extend({
   items: z.array(cartItemSchema).min(1).max(50),
 });
 
-const stripeVerifySchema = customerSchema.extend({
-  paymentIntentId: z.string().min(1).trim(),
+const flutterwaveVerifySchema = customerSchema.extend({
+  transactionId: z.string().min(1).trim(),
   items: z.array(cartItemSchema).min(1).max(50),
-});
-
-const paymentIntentSchema = z.object({
-  items: z.array(cartItemSchema).min(1).max(50),
-  currency: z.string().length(3).default('usd'),
 });
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -98,7 +89,7 @@ function sendEmailSafe(data: Parameters<typeof sendOrderConfirmation>[0]) {
 }
 
 // ─── PUBLIC: Products ─────────────────────────────────────────────────────────
-router.get('/products', async (req: Request, res: Response) => {
+router.get('/products', wrapAsync(async (req, res) => {
   try {
     const { tag, category, search } = req.query;
     const where: Record<string, unknown> = { status: 'active' };
@@ -194,87 +185,66 @@ router.patch('/orders/:id', requireAuth, async (req: Request, res: Response) => 
   }
 });
 
-// ─── PAYMENT: Stripe — Create Intent (server-side amount) ────────────────────
-router.post('/create-payment-intent', paymentLimiter, async (req: Request, res: Response) => {
-  try {
-    if (!stripe) { res.status(503).json({ error: 'Stripe is not configured' }); return; }
-
-    const parsed = paymentIntentSchema.safeParse(req.body);
-    if (!parsed.success) {
-      res.status(400).json({ error: 'Invalid request', details: parsed.error.flatten() });
-      return;
-    }
-
-    const { items, currency } = parsed.data;
-    const { total } = await calcServerTotal(items);
-
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: Math.round(total * 100), // server-calculated, not client-provided
-      currency,
-      automatic_payment_methods: { enabled: true },
-      metadata: { items: JSON.stringify(items) },
-    });
-
-    res.json({ clientSecret: paymentIntent.client_secret, total });
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : 'Payment setup failed';
-    res.status(400).json({ error: msg });
+// ─── PAYMENT: Flutterwave — Verify & Create Order ────────────────────────────
+router.post('/verify-flutterwave', paymentLimiter, wrapAsync(async (req, res) => {
+  const parsed = flutterwaveVerifySchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: 'Invalid request', details: parsed.error.flatten() });
+    return;
   }
-});
 
-// ─── PAYMENT: Stripe — Verify & Create Order ─────────────────────────────────
-router.post('/verify-stripe', paymentLimiter, async (req: Request, res: Response) => {
-  try {
-    if (!stripe) { res.status(503).json({ error: 'Stripe is not configured' }); return; }
+  const { transactionId, items, customerName, customerEmail, customerPhone } = parsed.data;
 
-    const parsed = stripeVerifySchema.safeParse(req.body);
-    if (!parsed.success) {
-      res.status(400).json({ error: 'Invalid request', details: parsed.error.flatten() });
-      return;
-    }
+  const flwSecret = process.env.FLUTTERWAVE_SECRET_KEY;
+  if (!flwSecret) { res.status(503).json({ error: 'Flutterwave is not configured on the server' }); return; }
 
-    const { paymentIntentId, items, customerName, customerEmail, customerPhone } = parsed.data;
+  // Prevent duplicate orders
+  const existing = await prisma.order.findFirst({ where: { paymentRef: String(transactionId) } });
+  if (existing) { res.json({ ...existing, items: JSON.parse(existing.items) }); return; }
 
-    // Verify payment intent with Stripe
-    const intent = await stripe.paymentIntents.retrieve(paymentIntentId);
-    if (intent.status !== 'succeeded') {
-      res.status(400).json({ error: 'Payment has not succeeded' });
-      return;
-    }
+  // Verify with Flutterwave API server-side (cannot be faked)
+  const verifyRes = await fetch(`https://api.flutterwave.com/v3/transactions/${encodeURIComponent(transactionId)}/verify`, {
+    headers: { Authorization: `Bearer ${flwSecret}` },
+  });
+  const verifyData = await verifyRes.json() as {
+    status: string;
+    data?: { status: string; amount: number; currency: string; customer: { email: string } };
+  };
 
-    // Prevent duplicate orders for same payment intent
-    const existing = await prisma.order.findFirst({ where: { paymentRef: paymentIntentId } });
-    if (existing) {
-      res.json({ ...existing, items: JSON.parse(existing.items) });
-      return;
-    }
-
-    // Recalculate total from DB (never trust client)
-    const { total, enrichedItems } = await calcServerTotal(items);
-
-    const order = await prisma.order.create({
-      data: {
-        items: JSON.stringify(enrichedItems),
-        subtotal: total,
-        total,
-        customerName,
-        customerEmail,
-        customerPhone,
-        paymentMethod: 'stripe',
-        paymentRef: paymentIntentId,
-        status: 'paid',
-      },
-    });
-
-    sendEmailSafe({ orderId: order.id, customerName, customerEmail, items: enrichedItems, total, paymentMethod: 'stripe', paymentRef: paymentIntentId });
-
-    res.status(201).json({ ...order, items: enrichedItems });
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : 'Order creation failed';
-    console.error('Stripe verify error:', msg);
-    res.status(400).json({ error: msg });
+  if (verifyData.status !== 'success' || verifyData.data?.status !== 'successful') {
+    res.status(400).json({ error: 'Payment verification failed. Transaction not successful.' });
+    return;
   }
-});
+
+  // Calculate total from DB (never trust client prices)
+  const { total, enrichedItems } = await calcServerTotal(items);
+
+  // Verify paid amount matches expected total (Flutterwave amount is in NGN directly)
+  const paidAmount = verifyData.data?.amount ?? 0;
+  if (Math.abs(paidAmount - total) > 1) {
+    console.error(`FLW amount mismatch: paid ₦${paidAmount}, expected ₦${total} for txn ${transactionId}`);
+    res.status(400).json({ error: 'Payment amount does not match order total.' });
+    return;
+  }
+
+  const order = await prisma.order.create({
+    data: {
+      items: JSON.stringify(enrichedItems),
+      subtotal: total,
+      total,
+      customerName,
+      customerEmail,
+      customerPhone,
+      paymentMethod: 'flutterwave',
+      paymentRef: String(transactionId),
+      status: 'paid',
+    },
+  });
+
+  sendEmailSafe({ orderId: order.id, customerName, customerEmail, items: enrichedItems, total, paymentMethod: 'flutterwave', paymentRef: String(transactionId) });
+
+  res.status(201).json({ ...order, items: enrichedItems });
+}));
 
 // ─── PAYMENT: Paystack — Verify & Create Order ───────────────────────────────
 router.post('/verify-paystack', paymentLimiter, async (req: Request, res: Response) => {

@@ -1,28 +1,34 @@
-import { Router, Request, Response } from 'express';
+import { Router } from 'express';
 import prisma from '../db/prisma';
 import { requireAuth } from '../middleware/auth';
+import { wrapAsync } from '../utils/wrapAsync';
 
 const router = Router();
 
-router.post('/', async (req: Request, res: Response) => {
-  const { email } = req.body;
-  if (!email) { res.status(400).json({ error: 'Email required' }); return; }
+// ─── PUBLIC ──────────────────────────────────────────────────────────────────
+router.post('/', wrapAsync(async (req, res) => {
+  const { email } = req.body || {};
+  if (!email || typeof email !== 'string') {
+    res.status(400).json({ error: 'Valid email required' });
+    return;
+  }
   const sub = await prisma.subscriber.upsert({
-    where: { email },
+    where: { email: email.toLowerCase().trim() },
     update: { active: true },
-    create: { email },
+    create: { email: email.toLowerCase().trim() },
   });
   res.status(201).json({ success: true, id: sub.id });
-});
+}));
 
-router.get('/', requireAuth, async (_req: Request, res: Response) => {
+// ─── ADMIN ────────────────────────────────────────────────────────────────────
+router.get('/', requireAuth, wrapAsync(async (_req, res) => {
   const subs = await prisma.subscriber.findMany({ orderBy: { createdAt: 'desc' } });
   res.json(subs);
-});
+}));
 
-router.delete('/:id', requireAuth, async (req: Request, res: Response) => {
+router.delete('/:id', requireAuth, wrapAsync(async (req, res) => {
   await prisma.subscriber.update({ where: { id: Number(req.params.id) }, data: { active: false } });
   res.json({ success: true });
-});
+}));
 
 export default router;

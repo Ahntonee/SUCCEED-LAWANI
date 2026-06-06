@@ -118,10 +118,6 @@ export const api = {
   },
   getProduct: (id: number) => request(`/shop/products/${id}`),
 
-  // Create Stripe payment intent (sends items, gets server-calculated total + clientSecret)
-  createPaymentIntent: (items: { id: number; qty: number }[], currency = 'usd') =>
-    request('/shop/create-payment-intent', { method: 'POST', body: JSON.stringify({ items, currency }) }),
-
   // Verify Paystack payment server-side and create order
   verifyPaystack: (data: {
     reference: string;
@@ -131,14 +127,14 @@ export const api = {
     customerPhone?: string;
   }) => request('/shop/verify-paystack', { method: 'POST', body: JSON.stringify(data) }),
 
-  // Verify Stripe payment server-side and create order
-  verifyStripe: (data: {
-    paymentIntentId: string;
+  // Verify Flutterwave payment server-side and create order
+  verifyFlutterwave: (data: {
+    transactionId: string;
     items: { id: number; qty: number }[];
     customerName: string;
     customerEmail: string;
     customerPhone?: string;
-  }) => request('/shop/verify-stripe', { method: 'POST', body: JSON.stringify(data) }),
+  }) => request('/shop/verify-flutterwave', { method: 'POST', body: JSON.stringify(data) }),
 
   // Shop — admin
   getAllProducts: () => request('/shop/products'),
