@@ -2,95 +2,127 @@ import { useEffect, useState, useRef } from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { Link } from 'react-router';
-import { Play, Pause, SkipForward, SkipBack, Music, Palette, TrendingUp, Calendar, ArrowRight, Heart, Phone, Send, Mail, MapPin, Briefcase } from 'lucide-react';
+import { Play, Pause, SkipForward, SkipBack, Music, Palette, TrendingUp, Calendar, ArrowRight, Heart, Phone, Send, Mail, MapPin, Briefcase, Download } from 'lucide-react';
 import { toast } from 'sonner';
 import { api } from '../lib/api';
+import { useSiteContent } from '../context/SiteContentContext';
 
 const services = [
-  {
-    icon: Music,
-    title: 'Music',
-    desc: 'Creating inspirational and soulful music that resonates with hearts across the globe. From Daily Miracles to Philistine.',
-    link: '/music',
-  },
-  {
-    icon: Palette,
-    title: 'Fashion Design',
-    desc: 'TheSucceedeer Designs — crafting exquisite male & female suits, traditional Agbada, and contemporary African styles.',
-    link: '/about',
-  },
-  {
-    icon: TrendingUp,
-    title: 'Digital Marketing',
-    desc: 'Expert in Facebook Ads, DMI, optimization, and growth strategies for brands looking to scale their digital presence.',
-    link: '/blog',
-  },
-  {
-    icon: Calendar,
-    title: 'Events & Booking',
-    desc: 'Available for performances, speaking engagements, fashion shows, and digital marketing consultations worldwide.',
-    link: '/events',
-  },
+  { icon: Music,      title: 'Music',            desc: 'Creating inspirational and soulful music that resonates with hearts across the globe. From Daily Miracles to Philistine.', link: '/music' },
+  { icon: Palette,    title: 'Fashion Design',    desc: 'TheSucceedeer Designs — crafting exquisite male & female suits, traditional Agbada, and contemporary African styles.',     link: '/about' },
+  { icon: TrendingUp, title: 'Digital Marketing', desc: 'Expert in Facebook Ads, DMI, optimization, and growth strategies for brands looking to scale their digital presence.',        link: '/blog' },
+  { icon: Calendar,   title: 'Events & Booking',  desc: 'Available for performances, speaking engagements, fashion shows, and digital marketing consultations worldwide.',            link: '/events' },
 ];
 
-interface HomeTrack { id: number; title: string; cover: string; }
+interface HomeTrack { id: number; title: string; cover: string; audioUrl: string; }
 interface HomeEvent { day: string; month: string; title: string; description: string; location: string; time: string; }
 interface HomeBlogPost { id: number; image: string; category: string; title: string; excerpt: string; }
 
 export default function Home() {
+  const content = useSiteContent();
   const [musicTracks, setMusicTracks] = useState<HomeTrack[]>([]);
   const [events, setEvents] = useState<HomeEvent[]>([]);
   const [blogPosts, setBlogPosts] = useState<HomeBlogPost[]>([]);
   const [currentTrack, setCurrentTrack] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [audioDuration, setAudioDuration] = useState(0);
   const [contactSending, setContactSending] = useState(false);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const tracksRef = useRef<HomeTrack[]>([]);
 
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const tracksRef = useRef<HomeTrack[]>([]);
   useEffect(() => { tracksRef.current = musicTracks; }, [musicTracks]);
 
+  // ── Fetch data ──────────────────────────────────────────────────────────────
   useEffect(() => {
     window.scrollTo(0, 0);
     api.getTracks().then((data: HomeTrack[]) => setMusicTracks(data.slice(0, 3))).catch(console.error);
     api.getEvents('upcoming').then((data: HomeEvent[]) => setEvents(data.slice(0, 4))).catch(console.error);
     api.getPublicPosts().then((data: HomeBlogPost[]) => setBlogPosts(data.slice(0, 3))).catch(console.error);
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
   }, []);
 
+  // ── Real audio player ───────────────────────────────────────────────────────
   useEffect(() => {
-    if (isPlaying) {
-      intervalRef.current = setInterval(() => {
-        setProgress((prev) => {
-          if (prev >= 100) {
-            handleNext();
-            return 0;
-          }
-          return prev + 0.5;
-        });
-      }, 100);
-    } else {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    }
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
+    const audio = new Audio();
+    audioRef.current = audio;
+
+    audio.ontimeupdate = () => {
+      if (audio.duration) {
+        setCurrentTime(audio.currentTime);
+        setProgress((audio.currentTime / audio.duration) * 100);
+      }
     };
+    audio.onloadedmetadata = () => setAudioDuration(audio.duration);
+    audio.onended = () => {
+      const list = tracksRef.current;
+      if (!list.length) return;
+      setCurrentTrack((prev) => (prev + 1) % list.length);
+      setProgress(0);
+      setCurrentTime(0);
+    };
+    audio.onerror = () => setIsPlaying(false);
+
+    return () => { audio.pause(); audio.src = ''; };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Update src when track changes
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    const track = tracksRef.current[currentTrack];
+    if (!track) return;
+    if (track.audioUrl) {
+      audio.src = track.audioUrl;
+      audio.load();
+      if (isPlaying) audio.play().catch(console.error);
+    } else {
+      audio.src = '';
+    }
+    setCurrentTime(0);
+    setProgress(0);
+    setAudioDuration(0);
+  }, [currentTrack]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Play / pause
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    if (isPlaying && audio.src) {
+      audio.play().catch(() => setIsPlaying(false));
+    } else {
+      audio.pause();
+    }
   }, [isPlaying]);
 
+  const handlePrev = () => {
+    const list = tracksRef.current;
+    if (!list.length) return;
+    setCurrentTrack((prev) => (prev - 1 + list.length) % list.length);
+    setProgress(0);
+  };
   const handleNext = () => {
     const list = tracksRef.current;
-    if (list.length === 0) return;
+    if (!list.length) return;
     setCurrentTrack((prev) => (prev + 1) % list.length);
     setProgress(0);
   };
 
-  const handlePrev = () => {
-    const list = tracksRef.current;
-    if (list.length === 0) return;
-    setCurrentTrack((prev) => (prev - 1 + list.length) % list.length);
-    setProgress(0);
+  const formatTime = (s: number) => {
+    if (!s || isNaN(s)) return '0:00';
+    const m = Math.floor(s / 60);
+    const sec = Math.floor(s % 60);
+    return `${m}:${sec < 10 ? '0' : ''}${sec}`;
+  };
+
+  const handleDownload = (track: HomeTrack) => {
+    if (!track.audioUrl) return;
+    const url = track.audioUrl.includes('cloudinary')
+      ? track.audioUrl.replace('/upload/', '/upload/fl_attachment/')
+      : track.audioUrl;
+    const a = document.createElement('a');
+    a.href = url; a.download = track.title; a.target = '_blank';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
   };
 
   const handleContactSubmit = async (e: React.FormEvent) => {
@@ -109,21 +141,29 @@ export default function Home() {
     }
   };
 
+  // ── Dynamic content helpers ─────────────────────────────────────────────────
+  const heroImage    = content.hero_image       || '';
+  const fashionImage = content.fashion_image    || '';
+  const marketingImage = content.marketing_image || '';
+  const donateUrl    = content.donate_url        || '';
+  const donateText   = content.donate_text       || 'Support My Music';
+
   return (
     <div className="min-h-screen">
       <Navbar />
 
-      {/* Hero Section */}
+      {/* ── Hero ───────────────────────────────────────────────────────────── */}
       <section className="min-h-screen flex items-center bg-gradient-to-br from-[#f0fdfa] via-[#ccfbf1] to-[#99f6e4] relative overflow-hidden pt-20">
         <div className="absolute w-[600px] h-[600px] bg-[rgba(13,148,136,0.08)] rounded-full -top-[200px] -right-[100px] animate-pulse" style={{ animationDuration: '6s' }} />
         <div className="absolute w-[400px] h-[400px] bg-[rgba(6,182,212,0.06)] rounded-full -bottom-[100px] -left-[100px] animate-pulse" style={{ animationDuration: '8s', animationDirection: 'reverse' }} />
         <div className="max-w-[1400px] mx-auto px-6 py-12 grid lg:grid-cols-2 gap-12 items-center relative z-10">
           <div>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-[#0f172a] leading-tight mb-6">
-              Exceptional Talent,<br /><span className="text-[#0d9488]">Every Time</span>
+              {content.hero_headline || 'Exceptional Talent,'}<br />
+              <span className="text-[#0d9488]">Every Time</span>
             </h1>
             <p className="text-[#64748b] text-lg leading-relaxed mb-8 max-w-lg">
-              Succeed Michael Lawani is a multi-talented creative force — a passionate musician, innovative fashion designer behind TheSucceedeer Designs, and a results-driven digital marketing expert.
+              {content.hero_subtext || 'Succeed Michael Lawani is a multi-talented creative force — a passionate musician, innovative fashion designer behind TheSucceedeer Designs, and a results-driven digital marketing expert.'}
             </p>
             <div className="flex flex-wrap gap-4 mb-10">
               <Link to="/music" className="inline-flex items-center gap-2 bg-[#0d9488] text-white px-6 py-3.5 rounded-full font-semibold hover:bg-[#0f766e] hover:-translate-y-0.5 transition-all shadow-[0_4px_20px_rgba(13,148,136,0.3)]">
@@ -132,27 +172,38 @@ export default function Home() {
               <Link to="/contact" className="inline-flex items-center gap-2 bg-white text-[#0f172a] px-6 py-3.5 rounded-full font-semibold border-2 border-gray-200 hover:border-[#0d9488] hover:text-[#0d9488] hover:-translate-y-0.5 transition-all">
                 <Heart size={18} /> Get In Touch
               </Link>
+              {donateUrl && (
+                <a href={donateUrl} target="_blank" rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 bg-amber-500 text-white px-6 py-3.5 rounded-full font-semibold hover:bg-amber-600 hover:-translate-y-0.5 transition-all shadow-[0_4px_20px_rgba(245,158,11,0.3)]">
+                  <Heart size={18} className="fill-white" /> {donateText}
+                </a>
+              )}
             </div>
             <div className="flex items-center gap-4">
               <div className="flex -space-x-3">
                 {[1, 2, 3].map((i) => (
-                  <div key={i} className="w-10 h-10 rounded-full border-3 border-white bg-[#0d9488] flex items-center justify-center text-white text-xs font-bold">
+                  <div key={i} className="w-10 h-10 rounded-full border-2 border-white bg-[#0d9488] flex items-center justify-center text-white text-xs font-bold">
                     {i === 1 ? 'SM' : i === 2 ? 'TL' : 'JD'}
                   </div>
                 ))}
               </div>
               <div className="text-sm">
-                <span className="font-bold text-[#0f172a]">50K+</span>{' '}
+                <span className="font-bold text-[#0f172a]">{content.fans_count || '50K+'}</span>{' '}
                 <span className="text-[#64748b]">Fans Worldwide</span>
               </div>
             </div>
           </div>
           <div className="flex justify-center relative">
-            <img
-              src="/images/hero-portrait.jpg"
-              alt="Succeed Michael Lawani"
-              className="w-full max-w-md rounded-3xl shadow-2xl object-cover"
-            />
+            {heroImage ? (
+              <img src={heroImage} alt="Succeed Michael Lawani" className="w-full max-w-md rounded-3xl shadow-2xl object-cover" />
+            ) : (
+              <div className="w-full max-w-md rounded-3xl shadow-2xl bg-gradient-to-br from-[#0d9488] to-[#0f172a] flex items-center justify-center" style={{ minHeight: 400 }}>
+                <div className="text-center text-white/60 p-8">
+                  <Music size={48} className="mx-auto mb-3 opacity-40" />
+                  <p className="text-sm">Upload hero portrait in<br /><strong>Admin → Site Content → Media &amp; Images</strong></p>
+                </div>
+              </div>
+            )}
             {/* Floating cards */}
             <div className="absolute top-[10%] -left-4 bg-white rounded-2xl p-4 shadow-xl max-w-[180px] animate-bounce" style={{ animationDuration: '4s' }}>
               <h4 className="text-sm font-bold text-[#0f172a] mb-1">Latest Release</h4>
@@ -169,14 +220,14 @@ export default function Home() {
               </div>
               <div>
                 <h4 className="text-sm font-bold">Book a Call</h4>
-                <p className="text-xs text-[#64748b]">+234 813 478 1588</p>
+                <p className="text-xs text-[#64748b]">{content.phone || '+234 813 478 1588'}</p>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Services Section */}
+      {/* ── Services ───────────────────────────────────────────────────────── */}
       <section className="py-20 bg-[#0d9488] relative overflow-hidden">
         <div className="absolute w-[300px] h-[300px] bg-white/5 rounded-full -top-[100px] -left-[100px]" />
         <div className="max-w-[1400px] mx-auto px-6 relative z-10">
@@ -188,37 +239,24 @@ export default function Home() {
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {services.map((service, i) => (
-              <Link
-                key={service.title}
-                to={service.link}
-                className={`rounded-2xl p-6 transition-all duration-400 hover:-translate-y-2 group ${
-                  i === 1 ? 'bg-white text-[#0f172a]' : 'bg-white/10 backdrop-blur border border-white/20 hover:bg-white/20'
-                }`}
-              >
-                <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 mx-auto ${
-                  i === 1 ? 'bg-[#0d9488] text-white' : 'bg-white/20 text-white'
-                }`}>
+              <Link key={service.title} to={service.link}
+                className={`rounded-2xl p-6 transition-all duration-400 hover:-translate-y-2 group ${i === 1 ? 'bg-white text-[#0f172a]' : 'bg-white/10 backdrop-blur border border-white/20 hover:bg-white/20'}`}>
+                <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 mx-auto ${i === 1 ? 'bg-[#0d9488] text-white' : 'bg-white/20 text-white'}`}>
                   <service.icon size={28} />
                 </div>
-                <h3 className={`text-lg font-bold text-center mb-2 ${i === 1 ? 'text-[#0f172a]' : 'text-white'}`}>
-                  {service.title}
-                </h3>
-                <p className={`text-sm text-center leading-relaxed ${i === 1 ? 'text-[#64748b]' : 'text-white/80'}`}>
-                  {service.desc}
-                </p>
+                <h3 className={`text-lg font-bold text-center mb-2 ${i === 1 ? 'text-[#0f172a]' : 'text-white'}`}>{service.title}</h3>
+                <p className={`text-sm text-center leading-relaxed ${i === 1 ? 'text-[#64748b]' : 'text-white/80'}`}>{service.desc}</p>
               </Link>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Music Section */}
+      {/* ── Music ──────────────────────────────────────────────────────────── */}
       <section className="py-20 bg-[#f8fafc]">
         <div className="max-w-[1400px] mx-auto px-6">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-[#0f172a] mb-4">
-              My <span className="text-[#0d9488]">Music</span>
-            </h2>
+            <h2 className="text-3xl md:text-4xl font-bold text-[#0f172a] mb-4">My <span className="text-[#0d9488]">Music</span></h2>
             <p className="text-[#64748b]">Stream and download my latest tracks. Experience the sound of inspiration.</p>
           </div>
           <div className="grid md:grid-cols-3 gap-8">
@@ -228,27 +266,34 @@ export default function Home() {
                   <img src={track.cover} alt={track.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   <div className="absolute inset-0 bg-[#0d9488]/70 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
-                      onClick={() => { setCurrentTrack(index); setIsPlaying(true); setProgress(0); }}
+                      onClick={() => { setCurrentTrack(index); setIsPlaying(currentTrack === index ? !isPlaying : true); }}
                       className="w-16 h-16 bg-white rounded-full flex items-center justify-center text-[#0d9488] hover:scale-110 transition-transform"
                     >
-                      <Play size={24} className="ml-1" />
+                      {currentTrack === index && isPlaying ? <Pause size={24} /> : <Play size={24} className="ml-1" />}
                     </button>
                   </div>
+                  {currentTrack === index && isPlaying && (
+                    <div className="absolute bottom-2 left-2 right-2 h-1 bg-white/30 rounded-full overflow-hidden">
+                      <div className="h-full bg-white rounded-full transition-all duration-100" style={{ width: `${progress}%` }} />
+                    </div>
+                  )}
                 </div>
                 <div className="p-6">
                   <h3 className="text-xl font-bold text-[#0f172a] mb-2">{track.title}</h3>
-                  <p className="text-[#64748b] text-sm mb-4">
-                    {index === 0 ? 'An uplifting anthem of faith and gratitude.' : index === 1 ? 'A powerful declaration of victory over every giant.' : 'The debut EP that started it all. Inspiring and soulful.'}
-                  </p>
                   <div className="flex gap-3">
                     <button
-                      onClick={() => { setCurrentTrack(index); setIsPlaying(true); setProgress(0); }}
-                      className="flex-1 bg-[#0d9488] text-white py-2.5 rounded-xl font-semibold text-sm hover:bg-[#0f766e] transition-colors flex items-center justify-center gap-1"
+                      onClick={() => { setCurrentTrack(index); setIsPlaying(currentTrack === index ? !isPlaying : true); }}
+                      disabled={!track.audioUrl}
+                      className="flex-1 bg-[#0d9488] text-white py-2.5 rounded-xl font-semibold text-sm hover:bg-[#0f766e] transition-colors flex items-center justify-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      <Play size={14} /> Listen
+                      {currentTrack === index && isPlaying ? <><Pause size={14} /> Pause</> : <><Play size={14} /> Listen</>}
                     </button>
-                    <button className="flex-1 bg-[#f8fafc] text-[#0f172a] py-2.5 rounded-xl font-semibold text-sm border-2 border-gray-200 hover:border-[#0d9488] hover:text-[#0d9488] transition-colors flex items-center justify-center gap-1">
-                      Download
+                    <button
+                      onClick={() => handleDownload(track)}
+                      disabled={!track.audioUrl}
+                      className="flex-1 bg-[#f8fafc] text-[#0f172a] py-2.5 rounded-xl font-semibold text-sm border-2 border-gray-200 hover:border-[#0d9488] hover:text-[#0d9488] transition-colors flex items-center justify-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      <Download size={14} /> Download
                     </button>
                   </div>
                 </div>
@@ -263,7 +308,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Fashion & Marketing Showcase */}
+      {/* ── Fashion ────────────────────────────────────────────────────────── */}
       <section className="py-20 bg-white">
         <div className="max-w-[1400px] mx-auto px-6">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
@@ -276,9 +321,7 @@ export default function Home() {
               </p>
               <div className="flex flex-wrap gap-3 mb-8">
                 {['Custom Fitting', 'Premium Fabrics', 'Worldwide Shipping', 'Express Delivery'].map((tag) => (
-                  <span key={tag} className="bg-[#f8fafc] text-[#0d9488] px-4 py-2 rounded-full text-sm font-medium border border-gray-100">
-                    {tag}
-                  </span>
+                  <span key={tag} className="bg-[#f8fafc] text-[#0d9488] px-4 py-2 rounded-full text-sm font-medium border border-gray-100">{tag}</span>
                 ))}
               </div>
               <Link to="/about" className="inline-flex items-center gap-2 bg-[#0d9488] text-white px-6 py-3 rounded-full font-semibold hover:bg-[#0f766e] transition-colors">
@@ -286,18 +329,36 @@ export default function Home() {
               </Link>
             </div>
             <div className="relative">
-              <img src="/images/fashion-show.jpg" alt="Fashion Show" className="rounded-3xl shadow-2xl w-full object-cover" />
+              {fashionImage ? (
+                <img src={fashionImage} alt="Fashion Show" className="rounded-3xl shadow-2xl w-full object-cover" />
+              ) : (
+                <div className="rounded-3xl shadow-2xl w-full bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center" style={{ minHeight: 320 }}>
+                  <div className="text-center text-gray-400 p-8">
+                    <Palette size={40} className="mx-auto mb-2 opacity-40" />
+                    <p className="text-sm">Upload fashion photo in<br /><strong>Admin → Site Content → Media &amp; Images</strong></p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
       </section>
 
-      {/* Digital Marketing */}
+      {/* ── Digital Marketing ──────────────────────────────────────────────── */}
       <section className="py-20 bg-gradient-to-br from-[#0f172a] to-[#1e293b] text-white">
         <div className="max-w-[1400px] mx-auto px-6">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="order-2 lg:order-1 relative">
-              <img src="/images/marketing-workspace.jpg" alt="Digital Marketing" className="rounded-3xl shadow-2xl w-full" />
+              {marketingImage ? (
+                <img src={marketingImage} alt="Digital Marketing" className="rounded-3xl shadow-2xl w-full" />
+              ) : (
+                <div className="rounded-3xl shadow-2xl w-full bg-white/5 border border-white/10 flex items-center justify-center" style={{ minHeight: 320 }}>
+                  <div className="text-center text-white/40 p-8">
+                    <TrendingUp size={40} className="mx-auto mb-2 opacity-40" />
+                    <p className="text-sm">Upload marketing photo in<br /><strong>Admin → Site Content → Media &amp; Images</strong></p>
+                  </div>
+                </div>
+              )}
               <div className="absolute top-4 -right-4 w-14 h-14 bg-[#0d9488] rounded-2xl flex items-center justify-center text-white text-xl animate-bounce" style={{ animationDuration: '3s' }}>+</div>
               <div className="absolute bottom-8 -left-4 w-14 h-14 bg-[#0d9488] rounded-2xl flex items-center justify-center text-white text-xl animate-bounce" style={{ animationDuration: '4s', animationDelay: '1s' }}>+</div>
             </div>
@@ -310,10 +371,10 @@ export default function Home() {
               </p>
               <div className="grid grid-cols-2 gap-4 mb-8">
                 {[
-                  { value: '500+', label: 'Campaigns Managed' },
-                  { value: '98%', label: 'Client Satisfaction' },
-                  { value: '10M+', label: 'Ad Spend Managed' },
-                  { value: '50+', label: 'Brands Scaled' },
+                  { value: content.campaigns_count    || '500+',  label: 'Campaigns Managed' },
+                  { value: content.client_satisfaction || '98%',  label: 'Client Satisfaction' },
+                  { value: content.ad_spend_managed   || '10M+',  label: 'Ad Spend Managed' },
+                  { value: content.brands_scaled      || '50+',   label: 'Brands Scaled' },
                 ].map((stat) => (
                   <div key={stat.label} className="bg-white/5 border border-white/10 rounded-2xl p-4 text-center">
                     <div className="text-2xl font-bold text-[#14b8a6] mb-1">{stat.value}</div>
@@ -329,7 +390,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Events Section */}
+      {/* ── Events ─────────────────────────────────────────────────────────── */}
       <section className="py-20 bg-[#f8fafc]">
         <div className="max-w-[1400px] mx-auto px-6">
           <div className="text-center mb-12">
@@ -364,7 +425,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Blog Section */}
+      {/* ── Blog ───────────────────────────────────────────────────────────── */}
       <section className="py-20 bg-white">
         <div className="max-w-[1400px] mx-auto px-6">
           <div className="text-center mb-12">
@@ -393,23 +454,21 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Contact Section */}
+      {/* ── Contact ────────────────────────────────────────────────────────── */}
       <section className="py-20 bg-gradient-to-br from-[#f0fdfa] to-[#ccfbf1]">
         <div className="max-w-[1400px] mx-auto px-6">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
-              <h2 className="text-3xl md:text-4xl font-bold text-[#0f172a] mb-4">
-                Get In <span className="text-[#0d9488]">Touch</span>
-              </h2>
+              <h2 className="text-3xl md:text-4xl font-bold text-[#0f172a] mb-4">Get In <span className="text-[#0d9488]">Touch</span></h2>
               <p className="text-[#64748b] leading-relaxed mb-8">
                 Ready to collaborate? Whether it is music production, bespoke fashion, or digital marketing strategy — let us create something extraordinary together.
               </p>
               <div className="space-y-4 mb-8">
                 {[
-                  { icon: Phone, label: 'Phone', value: '+234 813 478 1588' },
-                  { icon: Mail, label: 'Email', value: 'hello@succeedlawani.com' },
-                  { icon: MapPin, label: 'Location', value: 'Lagos, Nigeria' },
-                  { icon: Briefcase, label: 'Business', value: 'TheSucceedeer Designs & Digital Agency' },
+                  { icon: Phone,    label: 'Phone',    value: content.phone         || '+234 813 478 1588' },
+                  { icon: Mail,     label: 'Email',    value: content.email         || 'hello@succeedlawani.com' },
+                  { icon: MapPin,   label: 'Location', value: content.location      || 'Lagos, Nigeria' },
+                  { icon: Briefcase,label: 'Business', value: content.business_name || 'TheSucceedeer Designs & Digital Agency' },
                 ].map((item) => (
                   <div key={item.label} className="flex items-center gap-4">
                     <div className="w-12 h-12 bg-[#0d9488] rounded-xl flex items-center justify-center text-white">
@@ -450,16 +509,26 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Audio Player */}
+      {/* ── Floating Audio Player ───────────────────────────────────────────── */}
       {isPlaying && musicTracks.length > 0 && musicTracks[currentTrack] && (
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-2xl z-50 p-4">
           <div className="max-w-[1400px] mx-auto flex items-center gap-4">
-            <img src={musicTracks[currentTrack].cover} alt="" className="w-12 h-12 rounded-lg object-cover" />
+            <img src={musicTracks[currentTrack].cover} alt="" className="w-12 h-12 rounded-lg object-cover flex-shrink-0" />
             <div className="flex-1 min-w-0">
               <h4 className="font-semibold text-[#0f172a] text-sm truncate">{musicTracks[currentTrack].title}</h4>
               <p className="text-[#64748b] text-xs">Succeed Michael Lawani</p>
-              <div className="w-full h-1 bg-gray-200 rounded-full mt-2">
+              <div className="w-full h-1.5 bg-gray-200 rounded-full mt-2 cursor-pointer"
+                onClick={(e) => {
+                  const audio = audioRef.current;
+                  if (!audio || !audio.duration) return;
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  audio.currentTime = ((e.clientX - rect.left) / rect.width) * audio.duration;
+                }}>
                 <div className="h-full bg-[#0d9488] rounded-full transition-all duration-100" style={{ width: `${progress}%` }} />
+              </div>
+              <div className="flex justify-between text-[10px] text-[#64748b] mt-0.5">
+                <span>{formatTime(currentTime)}</span>
+                <span>{formatTime(audioDuration)}</span>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -477,5 +546,3 @@ export default function Home() {
     </div>
   );
 }
-
-

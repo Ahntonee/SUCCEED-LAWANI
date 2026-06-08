@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
-import { Mail, Calendar, FileText, Music, Users, Shirt, ArrowRight, Clock } from 'lucide-react';
+import { Mail, Calendar, FileText, Music, Users, Shirt, ArrowRight, Clock, ShoppingBag, Package } from 'lucide-react';
 import { api } from '../../lib/api';
 
 interface Stats {
@@ -11,6 +11,9 @@ interface Stats {
   tracks: number;
   subscribers: number;
   fashionInquiries: number;
+  products: number;
+  orders: number;
+  pendingOrders: number;
 }
 
 export default function AdminDashboard() {
@@ -26,7 +29,15 @@ export default function AdminDashboard() {
       api.getTracks(),
       api.getSubscribers(),
       api.getFashionInquiries(),
-    ]).then(([contacts, events, posts, tracks, subs, fashion]) => {
+      api.getAllProducts(),
+      api.getOrders({ limit: 1 }),
+    ]).then(([contacts, events, posts, tracks, subs, fashion, products, ordersRes]) => {
+      const ordersList: Record<string, string>[] = Array.isArray(ordersRes) ? ordersRes : (ordersRes.orders ?? []);
+      const totalOrders: number = ordersRes?.total ?? ordersList.length;
+      const pendingOrders: number = Array.isArray(ordersRes)
+        ? ordersRes.filter((o: Record<string, string>) => o.status === 'pending').length
+        : (ordersRes.pendingCount ?? 0);
+
       setStats({
         contacts: contacts.length,
         unreadContacts: contacts.filter((c: Record<string, string>) => c.status === 'unread').length,
@@ -35,6 +46,9 @@ export default function AdminDashboard() {
         tracks: tracks.length,
         subscribers: subs.length,
         fashionInquiries: fashion.filter((f: Record<string, string>) => f.status === 'new').length,
+        products: Array.isArray(products) ? products.filter((p: Record<string, string>) => p.status === 'active').length : 0,
+        orders: totalOrders,
+        pendingOrders,
       });
       setRecentContacts(contacts.slice(0, 5));
       setUpcomingEvents(events.slice(0, 3));
@@ -42,21 +56,23 @@ export default function AdminDashboard() {
   }, []);
 
   const statCards = [
-    { label: 'Unread Messages', value: stats?.unreadContacts ?? '—', icon: Mail, color: 'bg-[#0d9488]', link: '/admin/contacts' },
-    { label: 'Upcoming Events', value: stats?.upcomingEvents ?? '—', icon: Calendar, color: 'bg-[#0f172a]', link: '/admin/events' },
-    { label: 'Blog Posts', value: stats?.blogPosts ?? '—', icon: FileText, color: 'bg-[#0d9488]', link: '/admin/blog' },
-    { label: 'Music Tracks', value: stats?.tracks ?? '—', icon: Music, color: 'bg-[#0f172a]', link: '/admin/music' },
-    { label: 'Subscribers', value: stats?.subscribers ?? '—', icon: Users, color: 'bg-[#0d9488]', link: '/admin/subscribers' },
-    { label: 'Fashion Inquiries', value: stats?.fashionInquiries ?? '—', icon: Shirt, color: 'bg-[#0f172a]', link: '/admin/fashion' },
+    { label: 'Unread Messages',   value: stats?.unreadContacts   ?? '—', icon: Mail,        color: 'bg-[#0d9488]',  link: '/admin/contacts'   },
+    { label: 'Upcoming Events',   value: stats?.upcomingEvents   ?? '—', icon: Calendar,    color: 'bg-[#0f172a]',  link: '/admin/events'     },
+    { label: 'Blog Posts',        value: stats?.blogPosts        ?? '—', icon: FileText,    color: 'bg-[#0d9488]',  link: '/admin/blog'       },
+    { label: 'Music Tracks',      value: stats?.tracks           ?? '—', icon: Music,       color: 'bg-[#0f172a]',  link: '/admin/music'      },
+    { label: 'Subscribers',       value: stats?.subscribers      ?? '—', icon: Users,       color: 'bg-[#0d9488]',  link: '/admin/subscribers'},
+    { label: 'Fashion Inquiries', value: stats?.fashionInquiries ?? '—', icon: Shirt,       color: 'bg-[#0f172a]',  link: '/admin/fashion'    },
+    { label: 'Active Products',   value: stats?.products         ?? '—', icon: ShoppingBag, color: 'bg-[#0d9488]',  link: '/admin/shop'       },
+    { label: 'Total Orders',      value: stats?.orders           ?? '—', icon: Package,     color: 'bg-[#0f172a]',  link: '/admin/shop'       },
   ];
 
   const inquiryColors: Record<string, string> = {
-    music: 'bg-[#0d9488]/10 text-[#0d9488]',
-    fashion: 'bg-purple-100 text-purple-700',
+    music:     'bg-[#0d9488]/10 text-[#0d9488]',
+    fashion:   'bg-purple-100 text-purple-700',
     marketing: 'bg-blue-100 text-blue-700',
-    events: 'bg-orange-100 text-orange-700',
-    media: 'bg-pink-100 text-pink-700',
-    other: 'bg-gray-100 text-gray-600',
+    events:    'bg-orange-100 text-orange-700',
+    media:     'bg-pink-100 text-pink-700',
+    other:     'bg-gray-100 text-gray-600',
   };
 
   return (
@@ -68,13 +84,10 @@ export default function AdminDashboard() {
       </div>
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {statCards.map((card) => (
-          <Link
-            key={card.label}
-            to={card.link}
-            className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-md hover:-translate-y-0.5 transition-all group"
-          >
+          <Link key={card.label} to={card.link}
+            className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-md hover:-translate-y-0.5 transition-all group">
             <div className={`w-10 h-10 ${card.color} rounded-xl flex items-center justify-center mb-3`}>
               <card.icon className="text-white" size={20} />
             </div>
@@ -142,9 +155,7 @@ export default function AdminDashboard() {
                   <div className="text-[#64748b] text-xs">{e.location} · {e.time}</div>
                   <div className="text-[#0d9488] text-xs font-semibold">{e.price}</div>
                 </div>
-                <span className="bg-[#0d9488]/10 text-[#0d9488] text-xs font-bold px-2 py-1 rounded-full">
-                  {e.category}
-                </span>
+                <span className="bg-[#0d9488]/10 text-[#0d9488] text-xs font-bold px-2 py-1 rounded-full">{e.category}</span>
               </div>
             ))}
           </div>

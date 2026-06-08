@@ -5,28 +5,29 @@ import {
   LogOut, Menu, X, Shirt, Users, Globe, ChevronRight, ExternalLink, ShoppingBag,
 } from 'lucide-react';
 import { api } from '../lib/api';
+import { useSiteContent } from '../context/SiteContentContext';
 
 const navItems = [
-  { path: '/admin', label: 'Dashboard', icon: LayoutDashboard, exact: true },
-  { path: '/admin/music', label: 'Music', icon: Music },
-  { path: '/admin/events', label: 'Events', icon: Calendar },
-  { path: '/admin/blog', label: 'Blog', icon: FileText },
-  { path: '/admin/contacts', label: 'Contacts', icon: Mail },
-  { path: '/admin/fashion', label: 'Fashion', icon: Shirt },
-  { path: '/admin/subscribers', label: 'Subscribers', icon: Users },
-  { path: '/admin/content', label: 'Site Content', icon: Globe },
-  { path: '/admin/shop', label: 'Shop', icon: ShoppingBag },
-  { path: '/admin/settings', label: 'Settings', icon: Settings },
+  { path: '/admin',              label: 'Dashboard',   icon: LayoutDashboard, exact: true },
+  { path: '/admin/music',        label: 'Music',        icon: Music },
+  { path: '/admin/events',       label: 'Events',       icon: Calendar },
+  { path: '/admin/blog',         label: 'Blog',         icon: FileText },
+  { path: '/admin/contacts',     label: 'Contacts',     icon: Mail },
+  { path: '/admin/fashion',      label: 'Fashion',      icon: Shirt },
+  { path: '/admin/subscribers',  label: 'Subscribers',  icon: Users },
+  { path: '/admin/content',      label: 'Site Content', icon: Globe },
+  { path: '/admin/shop',         label: 'Shop',         icon: ShoppingBag },
+  { path: '/admin/settings',     label: 'Settings',     icon: Settings },
 ];
 
-// TODO: Replace this placeholder with the real Seedads dashboard URL
-const SEEDADS_DASHBOARD_URL = '#';
-
 export default function AdminLayout() {
+  const content = useSiteContent();
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [admin, setAdmin] = useState<{ name: string; email: string } | null>(null);
+
+  const seedadsUrl = content.seedads_url || '';
 
   useEffect(() => {
     const token = localStorage.getItem('admin_token');
@@ -65,16 +66,10 @@ export default function AdminLayout() {
               ? location.pathname === item.path
               : location.pathname === item.path || location.pathname.startsWith(item.path + '/');
             return (
-              <Link
-                key={item.path}
-                to={item.path}
-                onClick={() => setSidebarOpen(false)}
-                className={`flex items-center gap-3 px-5 py-3 mx-2 rounded-xl text-sm font-medium transition-all duration-200 group ${
-                  active
-                    ? 'bg-[#0d9488] text-white'
-                    : 'text-white/60 hover:bg-white/5 hover:text-white'
-                }`}
-              >
+              <Link key={item.path} to={item.path} onClick={() => setSidebarOpen(false)}
+                className={`flex items-center gap-3 px-5 py-3 mx-2 rounded-xl text-sm font-medium transition-all duration-200 ${
+                  active ? 'bg-[#0d9488] text-white' : 'text-white/60 hover:bg-white/5 hover:text-white'
+                }`}>
                 <item.icon size={18} />
                 <span className="flex-1">{item.label}</span>
                 {active && <ChevronRight size={14} className="opacity-60" />}
@@ -82,19 +77,22 @@ export default function AdminLayout() {
             );
           })}
 
-          {/* Seedads Dashboard — external link */}
+          {/* Seedads Dashboard — external link, URL set via Admin → Site Content */}
           <div className="mx-2 mt-3 border-t border-white/10 pt-3">
-            <a
-              href={SEEDADS_DASHBOARD_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => setSidebarOpen(false)}
-              className="flex items-center gap-3 px-5 py-3 rounded-xl text-sm font-medium transition-all duration-200 text-[#0d9488] bg-[#0d9488]/10 hover:bg-[#0d9488]/20"
-            >
-              <ExternalLink size={18} />
-              <span className="flex-1">Seedads Dashboard</span>
-              <ExternalLink size={12} className="opacity-50" />
-            </a>
+            {seedadsUrl ? (
+              <a href={seedadsUrl} target="_blank" rel="noopener noreferrer" onClick={() => setSidebarOpen(false)}
+                className="flex items-center gap-3 px-5 py-3 rounded-xl text-sm font-medium transition-all duration-200 text-[#0d9488] bg-[#0d9488]/10 hover:bg-[#0d9488]/20">
+                <ExternalLink size={18} />
+                <span className="flex-1">Seedads Dashboard</span>
+                <ExternalLink size={12} className="opacity-50" />
+              </a>
+            ) : (
+              <div className="px-5 py-3 rounded-xl text-sm text-white/25 flex items-center gap-3 cursor-default" title="Set seedads_url in Site Content to enable this link">
+                <ExternalLink size={18} />
+                <span className="flex-1">Seedads Dashboard</span>
+                <span className="text-[10px] bg-white/10 px-1.5 py-0.5 rounded">Not set</span>
+              </div>
+            )}
           </div>
         </nav>
 
@@ -109,10 +107,8 @@ export default function AdminLayout() {
               <div className="text-white/40 text-xs truncate">{admin?.email || ''}</div>
             </div>
           </div>
-          <button
-            onClick={logout}
-            className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-sm text-white/60 hover:bg-white/5 hover:text-white transition-all"
-          >
+          <button onClick={logout}
+            className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-sm text-white/60 hover:bg-white/5 hover:text-white transition-all">
             <LogOut size={16} /> Sign Out
           </button>
         </div>
