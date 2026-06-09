@@ -23,11 +23,13 @@ import AdminSettings from './pages/admin/AdminSettings'
 import AdminShop from './pages/admin/AdminShop'
 import { CartProvider } from './context/CartContext'
 import { SiteContentProvider } from './context/SiteContentContext'
+import FloatingDonate from './components/FloatingDonate'
 
 export default function App() {
   return (
     <SiteContentProvider>
       <CartProvider>
+        <FloatingDonate />
         <Routes>
           {/* Public site */}
           <Route path="/" element={<Home />} />
