@@ -3,6 +3,8 @@ import { useParams, useNavigate } from 'react-router';
 import { ShoppingCart, ArrowLeft, Flame, Star, TrendingUp, Sparkles, Award, Package, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import CartDrawer from '../components/CartDrawer';
+import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
 import { api } from '../lib/api';
 
 interface Product {
@@ -10,7 +12,7 @@ interface Product {
   images: string[]; category: string; tags: string[]; stock: number;
 }
 
-const TAG_ICONS: Record<string, JSX.Element> = {
+const TAG_ICONS: Record<string, React.JSX.Element> = {
   new: <span className="flex items-center gap-1 bg-[#0d9488] text-white text-xs font-bold px-2.5 py-1 rounded-full"><Sparkles size={11} />New</span>,
   featured: <span className="flex items-center gap-1 bg-blue-500 text-white text-xs font-bold px-2.5 py-1 rounded-full"><Star size={11} />Featured</span>,
   trending: <span className="flex items-center gap-1 bg-purple-500 text-white text-xs font-bold px-2.5 py-1 rounded-full"><TrendingUp size={11} />Trending</span>,
@@ -59,14 +61,16 @@ export default function ProductDetail() {
 
   return (
     <div className="min-h-screen bg-[#f8fafc]">
-      {/* Top bar */}
-      <div className="bg-[#0f172a] text-white px-4 py-4">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
+      <Navbar />
+
+      {/* Sub-header: back navigation + cart access */}
+      <div className="bg-[#0f172a] text-white pt-20">
+        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
           <button onClick={() => navigate('/shop')} className="flex items-center gap-2 text-white/70 hover:text-white transition-colors text-sm font-medium">
-            <ArrowLeft size={18} /> Back to Shop
+            <ArrowLeft size={16} /> Back to Shop
           </button>
           <button onClick={openCart} className="relative p-2 bg-white/10 hover:bg-[#0d9488] rounded-xl transition-colors">
-            <ShoppingCart size={20} />
+            <ShoppingCart size={18} />
             {count > 0 && <span className="absolute -top-1 -right-1 w-4 h-4 bg-[#0d9488] rounded-full text-[10px] font-bold flex items-center justify-center">{count}</span>}
           </button>
         </div>
@@ -166,6 +170,7 @@ export default function ProductDetail() {
         </div>
       </div>
 
+      <Footer />
       <CartDrawer />
     </div>
   );

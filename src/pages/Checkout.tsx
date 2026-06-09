@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { ArrowLeft, ShoppingBag, CreditCard, Check, Loader2, AlertCircle } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
 import { api } from '../lib/api';
 
 // ─── Type declarations for payment SDKs ──────────────────────────────────────
@@ -193,30 +195,36 @@ export default function Checkout() {
 
   // ── Success ─────────────────────────────────────────────────────────────────
   if (step === 'success') return (
-    <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl p-10 max-w-md w-full text-center shadow-xl border border-gray-100">
-        <div className="w-20 h-20 bg-[#0d9488]/10 rounded-full flex items-center justify-center mx-auto mb-5">
-          <Check size={36} className="text-[#0d9488]" />
+    <div className="min-h-screen bg-[#f8fafc]">
+      <Navbar />
+      <div className="pt-24 flex items-center justify-center p-4 min-h-screen">
+        <div className="bg-white rounded-3xl p-10 max-w-md w-full text-center shadow-xl border border-gray-100">
+          <div className="w-20 h-20 bg-[#0d9488]/10 rounded-full flex items-center justify-center mx-auto mb-5">
+            <Check size={36} className="text-[#0d9488]" />
+          </div>
+          <h2 className="text-2xl font-black text-[#0f172a] mb-2">Order Confirmed!</h2>
+          {completedOrder && <p className="text-[#0d9488] font-semibold mb-1">Order #{completedOrder.id}</p>}
+          <p className="text-[#64748b] mb-2">Thank you, <strong>{form.name}</strong>!</p>
+          <p className="text-[#64748b] text-sm mb-8">
+            A confirmation email has been sent to <strong>{form.email}</strong>.
+          </p>
+          <button onClick={() => navigate('/shop')}
+            className="w-full py-3.5 bg-[#0d9488] text-white rounded-2xl font-bold hover:bg-[#0f766e] transition-colors">
+            Continue Shopping
+          </button>
         </div>
-        <h2 className="text-2xl font-black text-[#0f172a] mb-2">Order Confirmed!</h2>
-        {completedOrder && <p className="text-[#0d9488] font-semibold mb-1">Order #{completedOrder.id}</p>}
-        <p className="text-[#64748b] mb-2">Thank you, <strong>{form.name}</strong>!</p>
-        <p className="text-[#64748b] text-sm mb-8">
-          A confirmation email has been sent to <strong>{form.email}</strong>.
-        </p>
-        <button onClick={() => navigate('/shop')}
-          className="w-full py-3.5 bg-[#0d9488] text-white rounded-2xl font-bold hover:bg-[#0f766e] transition-colors">
-          Continue Shopping
-        </button>
       </div>
+      <Footer />
     </div>
   );
 
   return (
     <div className="min-h-screen bg-[#f8fafc]">
-      {/* Header */}
-      <div className="bg-[#0f172a] text-white px-4 py-5">
-        <div className="max-w-4xl mx-auto flex items-center gap-4">
+      <Navbar />
+
+      {/* Sub-header: back navigation */}
+      <div className="bg-[#0f172a] text-white pt-20">
+        <div className="max-w-4xl mx-auto px-4 py-4 flex items-center gap-4">
           <button onClick={() => navigate('/shop')} className="text-white/70 hover:text-white transition-colors">
             <ArrowLeft size={20} />
           </button>
@@ -332,6 +340,7 @@ export default function Checkout() {
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   );
 }

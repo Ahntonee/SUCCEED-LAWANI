@@ -3,6 +3,8 @@ import { ShoppingCart, Search, SlidersHorizontal, Star, Flame, TrendingUp, Spark
 import { useNavigate } from 'react-router';
 import { useCart } from '../context/CartContext';
 import CartDrawer from '../components/CartDrawer';
+import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
 import { api } from '../lib/api';
 
 interface Product {
@@ -147,14 +149,18 @@ export default function Shop() {
 
   return (
     <div className="min-h-screen bg-[#f8fafc]">
-      {/* Header */}
-      <div className="bg-[#0f172a] text-white">
-        <div className="max-w-7xl mx-auto px-4 py-6 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-black">Shop</h1>
-            <p className="text-white/60 text-sm mt-0.5">Succeed Michael Lawani Collection</p>
+      <Navbar />
+
+      {/* Search bar — sits below fixed navbar */}
+      <div className="bg-[#0f172a] text-white pt-20">
+        <div className="max-w-7xl mx-auto px-4 py-6 flex items-center gap-4">
+          <div className="relative flex-1 max-w-xl">
+            <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40" />
+            <input value={search} onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search products..."
+              className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/10 rounded-2xl text-white placeholder-white/40 focus:outline-none focus:border-[#0d9488] text-sm transition-all" />
           </div>
-          <button onClick={openCart} className="relative p-3 bg-white/10 hover:bg-[#0d9488] rounded-2xl transition-colors">
+          <button onClick={openCart} className="relative p-3 bg-white/10 hover:bg-[#0d9488] rounded-2xl transition-colors flex-shrink-0">
             <ShoppingCart size={22} />
             {count > 0 && (
               <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#0d9488] rounded-full text-xs font-bold flex items-center justify-center">
@@ -162,16 +168,6 @@ export default function Shop() {
               </span>
             )}
           </button>
-        </div>
-
-        {/* Search */}
-        <div className="max-w-7xl mx-auto px-4 pb-6">
-          <div className="relative max-w-xl">
-            <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40" />
-            <input value={search} onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search products..."
-              className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/10 rounded-2xl text-white placeholder-white/40 focus:outline-none focus:border-[#0d9488] text-sm transition-all" />
-          </div>
         </div>
       </div>
 
@@ -231,6 +227,7 @@ export default function Shop() {
       </div>
 
       <CartDrawer />
+      <Footer />
     </div>
   );
 }
