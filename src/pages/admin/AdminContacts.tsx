@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Mail, Trash2, X } from 'lucide-react';
 import { api } from '../../lib/api';
+import { useDialog } from '../../context/DialogContext';
 
 interface Contact { id: number; name: string; email: string; subject: string; inquiryType: string; message: string; status: string; createdAt: string; }
 
@@ -21,6 +22,7 @@ const statusColors: Record<string, string> = {
 };
 
 export default function AdminContacts() {
+  const dialog = useDialog();
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [filter, setFilter] = useState('all');
   const [selected, setSelected] = useState<Contact | null>(null);
@@ -39,7 +41,7 @@ export default function AdminContacts() {
   };
 
   const del = async (id: number) => {
-    if (!confirm('Delete this message?')) return;
+    if (!(await dialog.confirm('Delete this message?', { variant: 'danger', confirmText: 'Delete' }))) return;
     await api.deleteContact(id);
     setSelected(null);
     load();

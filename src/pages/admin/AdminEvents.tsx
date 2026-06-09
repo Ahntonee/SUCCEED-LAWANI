@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Plus, Edit2, Trash2, Users, X, Check } from 'lucide-react';
 import { api } from '../../lib/api';
 import ImageUpload from '../../components/ImageUpload';
+import { useDialog } from '../../context/DialogContext';
 
 interface Event { id: number; title: string; date: string; day: string; month: string; time: string; location: string; image: string; category: string; description: string; price: string; spots: string; status: string; }
 interface Rsvp { id: number; name: string; email: string; phone: string; ticketCount: number; paymentStatus: string; createdAt: string; }
@@ -10,6 +11,7 @@ const empty: Omit<Event, 'id'> = { title: '', date: '', day: '', month: '', time
 const categories = ['Music', 'Fashion', 'Education', 'Lifestyle', 'Other'];
 
 export default function AdminEvents() {
+  const dialog = useDialog();
   const [events, setEvents] = useState<Event[]>([]);
   const [filter, setFilter] = useState<'all' | 'upcoming' | 'past'>('all');
   const [modal, setModal] = useState<{ open: boolean; data: Partial<Event> }>({ open: false, data: {} });
@@ -29,12 +31,12 @@ export default function AdminEvents() {
       else await api.createEvent(modal.data);
       setModal({ open: false, data: {} });
       load();
-    } catch (e) { alert((e as Error).message); }
+    } catch (e) { await dialog.alert((e as Error).message, { variant: 'danger' }); }
     finally { setSaving(false); }
   };
 
   const del = async (id: number) => {
-    if (!confirm('Delete this event?')) return;
+    if (!(await dialog.confirm('Delete this event?', { variant: 'danger', confirmText: 'Delete' }))) return;
     await api.deleteEvent(id); load();
   };
 

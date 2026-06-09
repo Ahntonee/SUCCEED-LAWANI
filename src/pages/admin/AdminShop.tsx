@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import { Plus, Edit2, Trash2, X, Check, Package, ShoppingBag, Upload, Flame, Star, TrendingUp, Sparkles, Award } from 'lucide-react';
 import { api } from '../../lib/api';
 import ImageUpload from '../../components/ImageUpload';
+import { useDialog } from '../../context/DialogContext';
 
 interface Product {
   id: number; name: string; description: string; price: number; comparePrice?: number;
@@ -25,6 +26,7 @@ const ALL_TAGS = [
 const emptyProduct = { name: '', description: '', price: 0, comparePrice: undefined as number | undefined, images: [] as string[], category: 'Apparel', tags: [] as string[], stock: 0, status: 'active' };
 
 export default function AdminShop() {
+  const dialog = useDialog();
   const [tab, setTab] = useState<'products' | 'orders'>('products');
   const [products, setProducts] = useState<Product[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
@@ -45,21 +47,21 @@ export default function AdminShop() {
   const openEdit = (p: Product) => setModal({ open: true, data: { ...p } });
 
   const save = async () => {
-    if (!modal.data.name?.trim()) { alert('Product name is required'); return; }
-    if (!modal.data.price || modal.data.price <= 0) { alert('A valid price is required'); return; }
-    if ((modal.data.images || []).length < 1) { alert('Please upload at least 1 product image'); return; }
+    if (!modal.data.name?.trim()) { await dialog.alert('Product name is required', { variant: 'warning' }); return; }
+    if (!modal.data.price || modal.data.price <= 0) { await dialog.alert('A valid price is required', { variant: 'warning' }); return; }
+    if ((modal.data.images || []).length < 1) { await dialog.alert('Please upload at least 1 product image', { variant: 'warning' }); return; }
     setSaving(true);
     try {
       if (modal.data.id) await api.updateProduct(modal.data.id, modal.data);
       else await api.createProduct(modal.data);
       setModal({ open: false, data: { ...emptyProduct } });
       load();
-    } catch (e) { alert((e as Error).message); }
+    } catch (e) { await dialog.alert((e as Error).message, { variant: 'danger' }); }
     finally { setSaving(false); }
   };
 
   const del = async (id: number) => {
-    if (!confirm('Delete this product?')) return;
+    if (!(await dialog.confirm('Delete this product?', { variant: 'danger', confirmText: 'Delete' }))) return;
     await api.deleteProduct(id); load();
   };
 
@@ -74,7 +76,7 @@ export default function AdminShop() {
     try {
       const url = await api.uploadImage(file);
       setModal((prev) => ({ ...prev, data: { ...prev.data, images: [...(prev.data.images || []), url] } }));
-    } catch (e) { alert((e as Error).message); }
+    } catch (e) { await dialog.alert((e as Error).message, { variant: 'danger' }); }
     finally { setImgUploading(false); }
   };
 

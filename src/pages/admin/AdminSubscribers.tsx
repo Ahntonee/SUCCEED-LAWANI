@@ -1,17 +1,19 @@
 import { useEffect, useState } from 'react';
 import { Users, Trash2, Download } from 'lucide-react';
 import { api } from '../../lib/api';
+import { useDialog } from '../../context/DialogContext';
 
 interface Subscriber { id: number; email: string; active: boolean; createdAt: string; }
 
 export default function AdminSubscribers() {
+  const dialog = useDialog();
   const [subs, setSubs] = useState<Subscriber[]>([]);
 
   const load = () => { api.getSubscribers().then(setSubs).catch(console.error); };
   useEffect(load, []);
 
   const remove = async (id: number) => {
-    if (!confirm('Unsubscribe this email?')) return;
+    if (!(await dialog.confirm('Unsubscribe this email?', { variant: 'danger', confirmText: 'Unsubscribe' }))) return;
     await api.deleteSubscriber(id); load();
   };
 

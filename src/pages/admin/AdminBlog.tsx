@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Plus, Edit2, Trash2, Star, Eye, X, Check, Images, Upload } from 'lucide-react';
 import { api } from '../../lib/api';
 import ImageUpload from '../../components/ImageUpload';
+import { useDialog } from '../../context/DialogContext';
 
 interface Post { id: number; title: string; excerpt: string; content: string; image: string; images: string[]; category: string; date: string; readTime: string; tags: string[]; featured: boolean; status: string; viewCount: number; }
 
@@ -9,6 +10,7 @@ const empty: Omit<Post, 'id' | 'viewCount'> = { title: '', excerpt: '', content:
 const categories = ['Music', 'Fashion', 'Marketing', 'Lifestyle'];
 
 export default function AdminBlog() {
+  const dialog = useDialog();
   const [posts, setPosts] = useState<Post[]>([]);
   const [modal, setModal] = useState<{ open: boolean; data: Partial<Post> }>({ open: false, data: {} });
   const [tagInput, setTagInput] = useState('');
@@ -30,12 +32,12 @@ export default function AdminBlog() {
       setModal({ open: false, data: {} });
       setTagInput('');
       load();
-    } catch (e) { alert((e as Error).message); }
+    } catch (e) { await dialog.alert((e as Error).message, { variant: 'danger' }); }
     finally { setSaving(false); }
   };
 
   const del = async (id: number) => {
-    if (!confirm('Delete this post?')) return;
+    if (!(await dialog.confirm('Delete this post?', { variant: 'danger', confirmText: 'Delete' }))) return;
     await api.deleteBlogPost(id); load();
   };
 
@@ -58,7 +60,7 @@ export default function AdminBlog() {
       const url = await api.uploadImage(file);
       const images = [...(modal.data.images || []), url];
       setModal((prev) => ({ ...prev, data: { ...prev.data, images } }));
-    } catch (e) { alert((e as Error).message); }
+    } catch (e) { await dialog.alert((e as Error).message, { variant: 'danger' }); }
     finally { setImgUploading(false); }
   };
 

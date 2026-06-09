@@ -23,10 +23,12 @@ import AdminSettings from './pages/admin/AdminSettings'
 import AdminShop from './pages/admin/AdminShop'
 import { CartProvider } from './context/CartContext'
 import { SiteContentProvider } from './context/SiteContentContext'
+import { DialogProvider } from './context/DialogContext'
 import FloatingDonate from './components/FloatingDonate'
 
 export default function App() {
   return (
+    <DialogProvider>
     <SiteContentProvider>
       <CartProvider>
         <FloatingDonate />
@@ -61,5 +63,6 @@ export default function App() {
         </Routes>
       </CartProvider>
     </SiteContentProvider>
+    </DialogProvider>
   )
 }

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Save, Globe, RefreshCw } from 'lucide-react';
 import { api } from '../../lib/api';
 import ImageUpload from '../../components/ImageUpload';
+import { useDialog } from '../../context/DialogContext';
 
 interface ContentMap { [key: string]: string; }
 interface ContentField {
@@ -98,6 +99,7 @@ const sections: ContentSection[] = [
 ];
 
 export default function AdminContent() {
+  const dialog = useDialog();
   const [content, setContent] = useState<ContentMap>({});
   const [saving, setSaving] = useState<string | null>(null);
   const [saved, setSaved] = useState<string | null>(null);
@@ -116,7 +118,7 @@ export default function AdminContent() {
       await api.updateContentKey(key, val);
       setSaved(key);
       setTimeout(() => setSaved(null), 2000);
-    } catch (e) { alert((e as Error).message); }
+    } catch (e) { await dialog.alert((e as Error).message, { variant: 'danger' }); }
     finally { setSaving(null); }
   };
 

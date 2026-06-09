@@ -3,6 +3,7 @@ import { Plus, Edit2, Trash2, Star, Music, Disc3, ExternalLink, X, Check } from 
 import { api } from '../../lib/api';
 import ImageUpload from '../../components/ImageUpload';
 import AudioUpload from '../../components/AudioUpload';
+import { useDialog } from '../../context/DialogContext';
 
 interface Track { id: number; title: string; album: string; duration: string; cover: string; audioUrl: string; featured: boolean; playCount: number; downloadCount: number; order: number; }
 interface Album { id: number; title: string; year: string; type: string; cover: string; trackCount: number; description: string; }
@@ -12,6 +13,7 @@ const emptyTrack: Omit<Track, 'id' | 'playCount' | 'downloadCount'> = { title: '
 const emptyAlbum: Omit<Album, 'id'> = { title: '', year: '', type: 'Album', cover: '', trackCount: 0, description: '' };
 
 export default function AdminMusic() {
+  const dialog = useDialog();
   const [tab, setTab] = useState<'tracks' | 'albums' | 'streaming'>('tracks');
   const [tracks, setTracks] = useState<Track[]>([]);
   const [albums, setAlbums] = useState<Album[]>([]);
@@ -34,12 +36,12 @@ export default function AdminMusic() {
       else await api.createTrack(trackModal.data);
       setTrackModal({ open: false, data: {} });
       load();
-    } catch (e) { alert((e as Error).message); }
+    } catch (e) { await dialog.alert((e as Error).message, { variant: 'danger' }); }
     finally { setSaving(false); }
   };
 
   const deleteTrack = async (id: number) => {
-    if (!confirm('Delete this track?')) return;
+    if (!(await dialog.confirm('Delete this track?', { variant: 'danger', confirmText: 'Delete' }))) return;
     await api.deleteTrack(id); load();
   };
 
@@ -50,12 +52,12 @@ export default function AdminMusic() {
       else await api.createAlbum(albumModal.data);
       setAlbumModal({ open: false, data: {} });
       load();
-    } catch (e) { alert((e as Error).message); }
+    } catch (e) { await dialog.alert((e as Error).message, { variant: 'danger' }); }
     finally { setSaving(false); }
   };
 
   const deleteAlbum = async (id: number) => {
-    if (!confirm('Delete this album?')) return;
+    if (!(await dialog.confirm('Delete this album?', { variant: 'danger', confirmText: 'Delete' }))) return;
     await api.deleteAlbum(id); load();
   };
 

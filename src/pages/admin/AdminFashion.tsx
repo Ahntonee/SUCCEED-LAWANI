@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Shirt, Trash2, X } from 'lucide-react';
 import { api } from '../../lib/api';
+import { useDialog } from '../../context/DialogContext';
 
 interface Inquiry { id: number; name: string; email: string; phone: string; garmentType: string; measurements: string; budget: string; notes: string; status: string; createdAt: string; }
 
@@ -11,6 +12,7 @@ const statusColors: Record<string, string> = {
 };
 
 export default function AdminFashion() {
+  const dialog = useDialog();
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
   const [filter, setFilter] = useState('all');
   const [selected, setSelected] = useState<Inquiry | null>(null);
@@ -26,7 +28,7 @@ export default function AdminFashion() {
   };
 
   const del = async (id: number) => {
-    if (!confirm('Delete this inquiry?')) return;
+    if (!(await dialog.confirm('Delete this inquiry?', { variant: 'danger', confirmText: 'Delete' }))) return;
     await api.deleteFashionInquiry(id); setSelected(null); load();
   };
 
