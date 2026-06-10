@@ -177,3 +177,20 @@ model Order {
   @@index([paymentRef])
   @@index([createdAt])
 }
+
+model Donation {
+  id         Int       @id @default(autoincrement())
+  reference  String    @unique
+  donorName  String    @default("")
+  donorEmail String
+  message    String    @default("") @db.Text
+  amount     Float
+  currency   String    @default("NGN")
+  gateway    String    @default("flutterwave")
+  status     String    @default("pending")
+  paidAt     DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([status])
+  @@index([reference])
+}

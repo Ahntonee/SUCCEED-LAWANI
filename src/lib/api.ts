@@ -151,4 +151,13 @@ export const api = {
   getFashionInquiries: (status?: string) => request(`/fashion${status ? `?status=${status}` : ''}`),
   updateFashionInquiry: (id: number, data: object) => request(`/fashion/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
   deleteFashionInquiry: (id: number) => request(`/fashion/${id}`, { method: 'DELETE' }),
+
+  // Donations — public
+  initDonation: (data: { amount: number; currency?: string; name?: string; email: string; message?: string }) =>
+    request('/donations/init', { method: 'POST', body: JSON.stringify(data) }),
+  verifyDonation: (reference: string) =>
+    request(`/donations/verify/${encodeURIComponent(reference)}`),
+
+  // Donations — admin
+  getDonations: () => request('/donations'),
 };

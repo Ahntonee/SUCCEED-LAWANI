@@ -27,6 +27,7 @@ import subscribersRoutes from './routes/subscribers';
 import fashionRoutes from './routes/fashion';
 import uploadRoutes from './routes/upload';
 import shopRoutes from './routes/shop';
+import donationsRoutes from './routes/donations';
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -68,6 +69,7 @@ app.use('/api/subscribers', subscribersRoutes);
 app.use('/api/fashion', fashionRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/shop', shopRoutes);
+app.use('/api/donations', donationsRoutes);
 
 app.get('/api/health', (_req, res) => res.json({ status: 'ok', timestamp: new Date().toISOString() }));
 
