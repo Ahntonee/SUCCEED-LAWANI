@@ -127,6 +127,10 @@ export const api = {
     customerPhone?: string;
   }) => request('/shop/verify-paystack', { method: 'POST', body: JSON.stringify(data) }),
 
+  // Initialise payment — validates gateway config server-side before opening popup
+  initPayment: (data: { gateway: 'flutterwave' | 'paystack'; items: { id: number; qty: number }[] }) =>
+    request('/shop/payment-init', { method: 'POST', body: JSON.stringify(data) }),
+
   // Verify Flutterwave payment server-side and create order
   verifyFlutterwave: (data: {
     transactionId: string;

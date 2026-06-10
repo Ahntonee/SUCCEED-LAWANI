@@ -92,15 +92,26 @@ export default function Checkout() {
   };
 
   // ── Paystack ────────────────────────────────────────────────────────────────
-  const payWithPaystack = () => {
-    const key = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY;
-    if (!key) { setError('Paystack is not configured. Please contact support.'); return; }
+  // Calls backend first — popup only opens if server confirms Paystack is configured
+  const payWithPaystack = async () => {
     if (!window.PaystackPop) { setError('Paystack failed to load. Please refresh and try again.'); return; }
 
+    setProcessing(true);
+    setError('');
+    let init: { publicKey: string; totalKobo: number };
+    try {
+      init = await api.initPayment({ gateway: 'paystack', items: cartItems() });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Payment could not be started. Please try again.');
+      setProcessing(false);
+      return;
+    }
+    setProcessing(false); // reset before popup opens
+
     const handler = window.PaystackPop.setup({
-      key,
+      key: init.publicKey,
       email: form.email,
-      amount: Math.round(total * 100), // kobo
+      amount: init.totalKobo,
       currency: 'NGN',
       ref: `SML-PS-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
       metadata: {
@@ -134,15 +145,26 @@ export default function Checkout() {
   };
 
   // ── Flutterwave ─────────────────────────────────────────────────────────────
-  const payWithFlutterwave = () => {
-    const key = import.meta.env.VITE_FLUTTERWAVE_PUBLIC_KEY;
-    if (!key) { setError('Flutterwave is not configured. Please contact support.'); return; }
+  // Calls backend first — popup only opens if server confirms Flutterwave is configured
+  const payWithFlutterwave = async () => {
     if (!window.FlutterwaveCheckout) { setError('Flutterwave failed to load. Please refresh and try again.'); return; }
 
+    setProcessing(true);
+    setError('');
+    let init: { publicKey: string; txRef: string; total: number };
+    try {
+      init = await api.initPayment({ gateway: 'flutterwave', items: cartItems() });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Payment could not be started. Please try again.');
+      setProcessing(false);
+      return;
+    }
+    setProcessing(false); // reset before popup opens
+
     window.FlutterwaveCheckout({
-      public_key: key,
-      tx_ref: `SML-FLW-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-      amount: total,
+      public_key: init.publicKey,
+      tx_ref: init.txRef,
+      amount: init.total,
       currency: 'NGN',
       payment_options: 'card,mobilemoney,ussd,bank_transfer',
       customer: {
@@ -153,7 +175,6 @@ export default function Checkout() {
       customizations: {
         title: 'Succeed Michael Lawani',
         description: `Order of ${items.length} item(s)`,
-        logo: `${import.meta.env.VITE_API_URL?.replace('/api', '') || 'https://succeed-lawani.onrender.com'}/uploads/logo.png`,
       },
       callback: async (data: { transaction_id: number; status: string; tx_ref: string }) => {
         if (data.status !== 'successful') {
@@ -186,6 +207,7 @@ export default function Checkout() {
   };
 
   const handlePay = () => {
+    if (processing) return;
     const errors = validateForm(form);
     if (Object.keys(errors).length > 0) { setFieldErrors(errors); return; }
     setError('');

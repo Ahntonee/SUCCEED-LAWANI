@@ -1,4 +1,5 @@
 import { Router, Request, Response } from 'express';
+import crypto from 'crypto';
 import { z } from 'zod';
 import rateLimit from 'express-rate-limit';
 import prisma from '../db/prisma';
@@ -182,6 +183,55 @@ router.patch('/orders/:id', requireAuth, async (req: Request, res: Response) => 
     res.json({ ...order, items: JSON.parse(order.items) });
   } catch {
     res.status(500).json({ error: 'Failed to update order' });
+  }
+});
+
+// ─── PAYMENT: Init — validate gateway config before opening popup ─────────────
+// Returns public key + tx reference from the server.
+// If the secret key is missing/wrong the endpoint returns 503 immediately,
+// so the popup never opens and the user sees a clear error message.
+router.post('/payment-init', async (req: Request, res: Response) => {
+  try {
+    const gateway = String(req.body.gateway || '').toLowerCase();
+    const rawItems: unknown = req.body.items;
+
+    if (!Array.isArray(rawItems) || rawItems.length === 0) {
+      res.status(400).json({ error: 'Cart is empty.' });
+      return;
+    }
+
+    // Validate items + calculate authoritative total from DB
+    const items = (rawItems as { id: unknown; qty: unknown }[]).map((i) => ({
+      id: Number(i.id),
+      qty: Number(i.qty),
+    }));
+    const { total } = await calcServerTotal(items);
+
+    if (gateway === 'flutterwave') {
+      const secret = process.env.FLUTTERWAVE_SECRET_KEY || '';
+      const pubKey = process.env.FLUTTERWAVE_PUBLIC_KEY || '';
+      if (!secret || !pubKey) {
+        res.status(503).json({ error: 'Flutterwave is not available right now. Please try Paystack or contact support.' });
+        return;
+      }
+      const txRef = `SML-FLW-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`;
+      res.json({ gateway, txRef, publicKey: pubKey, total });
+
+    } else if (gateway === 'paystack') {
+      const secret = process.env.PAYSTACK_SECRET_KEY || '';
+      const pubKey = process.env.PAYSTACK_PUBLIC_KEY || '';
+      if (!secret || !pubKey) {
+        res.status(503).json({ error: 'Paystack is not available right now. Please try Flutterwave or contact support.' });
+        return;
+      }
+      res.json({ gateway, publicKey: pubKey, totalKobo: Math.round(total * 100), total });
+
+    } else {
+      res.status(400).json({ error: 'Unknown payment gateway.' });
+    }
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'Failed to initialise payment';
+    res.status(400).json({ error: msg });
   }
 });
 
