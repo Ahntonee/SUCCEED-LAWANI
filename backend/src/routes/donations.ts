@@ -60,9 +60,9 @@ router.get('/verify/:reference', async (req: Request, res: Response) => {
     if (!donation) { res.status(404).json({ error: 'Donation not found' }); return; }
     if (donation.status === 'paid') { res.json({ status: 'paid', donation }); return; }
 
-    // Attempt server-side verification only if we have a valid secret key
+    // Attempt server-side verification if a secret key is configured
     const secret = process.env.FLUTTERWAVE_SECRET_KEY || '';
-    if (secret && secret.startsWith('FLWSECK')) {
+    if (secret) {
       try {
         const r = await fetch(
           `https://api.flutterwave.com/v3/transactions/verify_by_reference?tx_ref=${encodeURIComponent(reference)}`,
