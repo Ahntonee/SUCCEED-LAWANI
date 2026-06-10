@@ -101,7 +101,7 @@ router.get('/products', wrapAsync(async (req, res) => {
   } catch {
     res.status(500).json({ error: 'Failed to load products' });
   }
-});
+}));
 
 router.get('/products/:id', async (req: Request, res: Response) => {
   try {
