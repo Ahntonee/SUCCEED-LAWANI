@@ -45,10 +45,14 @@ const sections: ContentSection[] = [
     ],
   },
   {
-    title: 'About Page Bio',
+    title: 'About Page',
     keys: [
-      { key: 'about_bio_1', label: 'Bio Paragraph 1', multiline: true },
-      { key: 'about_bio_2', label: 'Bio Paragraph 2', multiline: true },
+      { key: 'about_portrait', label: 'About Page Portrait (overrides hero portrait if set)', type: 'image' },
+      { key: 'about_bio_1', label: 'Bio Paragraph 1', multiline: true, placeholder: 'A multi-talented creative force born in Lagos...' },
+      { key: 'about_bio_2', label: 'Bio Paragraph 2', multiline: true, placeholder: 'With over 8 years of professional experience...' },
+      { key: 'about_story_1', label: '"Why I Create" — Paragraph 1', multiline: true, placeholder: 'Growing up in the vibrant city of Lagos...' },
+      { key: 'about_story_2', label: '"Why I Create" — Paragraph 2', multiline: true, placeholder: 'Every song I write carries a message of hope...' },
+      { key: 'about_story_3', label: '"Why I Create" — Paragraph 3', multiline: true, placeholder: 'My mission is simple: to use every gift...' },
     ],
   },
   {
