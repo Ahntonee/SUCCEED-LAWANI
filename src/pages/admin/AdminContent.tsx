@@ -88,6 +88,23 @@ const sections: ContentSection[] = [
     ],
   },
   {
+    title: 'Skills & Expertise (About Page)',
+    keys: [
+      { key: 'skill_1_name',  label: 'Skill 1 — Name',        placeholder: 'Music Production' },
+      { key: 'skill_1_level', label: 'Skill 1 — Level',        placeholder: '95%' },
+      { key: 'skill_1_desc',  label: 'Skill 1 — Description',  placeholder: 'Vocal performance, songwriting, audio production' },
+      { key: 'skill_2_name',  label: 'Skill 2 — Name',        placeholder: 'Fashion Design' },
+      { key: 'skill_2_level', label: 'Skill 2 — Level',        placeholder: '98%' },
+      { key: 'skill_2_desc',  label: 'Skill 2 — Description',  placeholder: 'Bespoke tailoring, collection design, styling' },
+      { key: 'skill_3_name',  label: 'Skill 3 — Name',        placeholder: 'Digital Marketing' },
+      { key: 'skill_3_level', label: 'Skill 3 — Level',        placeholder: '96%' },
+      { key: 'skill_3_desc',  label: 'Skill 3 — Description',  placeholder: 'Facebook Ads, SEO, brand strategy, analytics' },
+      { key: 'skill_4_name',  label: 'Skill 4 — Name',        placeholder: 'Sound Engineering' },
+      { key: 'skill_4_level', label: 'Skill 4 — Level',        placeholder: '90%' },
+      { key: 'skill_4_desc',  label: 'Skill 4 — Description',  placeholder: 'Mixing, mastering, studio production' },
+    ],
+  },
+  {
     title: 'FAQ (Contact Page)',
     keys: [
       { key: 'faq_1_q', label: 'Question 1' },

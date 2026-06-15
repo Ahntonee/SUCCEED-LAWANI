@@ -15,11 +15,12 @@ const milestones = [
   { year: '2026', title: 'Daily Miracles Album', desc: 'Released highly anticipated album "Daily Miracles" to critical acclaim.' },
 ];
 
-const skills = [
-  { icon: Music,       name: 'Music Production', level: '95%', desc: 'Vocal performance, songwriting, audio production' },
-  { icon: Palette,     name: 'Fashion Design',   level: '98%', desc: 'Bespoke tailoring, collection design, styling' },
-  { icon: TrendingUp,  name: 'Digital Marketing',level: '96%', desc: 'Facebook Ads, SEO, brand strategy, analytics' },
-  { icon: Headphones,  name: 'Sound Engineering',level: '90%', desc: 'Mixing, mastering, studio production' },
+const SKILL_ICONS = [Music, Palette, TrendingUp, Headphones];
+const SKILL_DEFAULTS = [
+  { name: 'Music Production', level: '95%', desc: 'Vocal performance, songwriting, audio production' },
+  { name: 'Fashion Design',   level: '98%', desc: 'Bespoke tailoring, collection design, styling' },
+  { name: 'Digital Marketing',level: '96%', desc: 'Facebook Ads, SEO, brand strategy, analytics' },
+  { name: 'Sound Engineering',level: '90%', desc: 'Mixing, mastering, studio production' },
 ];
 
 const values = [
@@ -140,17 +141,24 @@ export default function About() {
             <p className="text-[#64748b] max-w-xl mx-auto">Years of dedication have honed these abilities to world-class levels.</p>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {skills.map((skill) => (
-              <div key={skill.name}
-                className="bg-[#f8fafc] rounded-2xl p-6 hover:bg-[#0d9488] group transition-all duration-400 hover:-translate-y-2">
-                <div className="w-14 h-14 bg-[#0d9488] group-hover:bg-white rounded-xl flex items-center justify-center mb-4 transition-colors duration-300">
-                  <skill.icon className="text-white group-hover:text-[#0d9488]" size={24} />
+            {SKILL_DEFAULTS.map((defaults, i) => {
+              const n = i + 1;
+              const Icon = SKILL_ICONS[i];
+              const name  = content[`skill_${n}_name`]  || defaults.name;
+              const level = content[`skill_${n}_level`] || defaults.level;
+              const desc  = content[`skill_${n}_desc`]  || defaults.desc;
+              return (
+                <div key={n}
+                  className="bg-[#f8fafc] rounded-2xl p-6 hover:bg-[#0d9488] group transition-all duration-400 hover:-translate-y-2">
+                  <div className="w-14 h-14 bg-[#0d9488] group-hover:bg-white rounded-xl flex items-center justify-center mb-4 transition-colors duration-300">
+                    <Icon className="text-white group-hover:text-[#0d9488]" size={24} />
+                  </div>
+                  <h3 className="font-bold text-[#0f172a] group-hover:text-white text-lg mb-1 transition-colors">{name}</h3>
+                  <div className="text-[#0d9488] group-hover:text-white/80 font-bold text-sm mb-2 transition-colors">{level}</div>
+                  <p className="text-[#64748b] group-hover:text-white/70 text-sm transition-colors">{desc}</p>
                 </div>
-                <h3 className="font-bold text-[#0f172a] group-hover:text-white text-lg mb-1 transition-colors">{skill.name}</h3>
-                <div className="text-[#0d9488] group-hover:text-white/80 font-bold text-sm mb-2 transition-colors">{skill.level}</div>
-                <p className="text-[#64748b] group-hover:text-white/70 text-sm transition-colors">{skill.desc}</p>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>
