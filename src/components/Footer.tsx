@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { Link } from 'react-router';
 import { Facebook, Instagram, Twitter, Youtube, Linkedin, Heart } from 'lucide-react';
 import { useSiteContent } from '../context/SiteContentContext';
+import DonateModal from './DonateModal';
 
 const quickLinks = [
   { name: 'About Me',   path: '/about'   },
@@ -21,6 +23,7 @@ const services = [
 
 export default function Footer() {
   const content = useSiteContent();
+  const [donateOpen, setDonateOpen] = useState(false);
 
   const socialLinks = [
     { icon: Facebook, href: content.facebook_url,  label: 'Facebook'  },
@@ -75,10 +78,11 @@ export default function Footer() {
 
             {/* Donate button */}
             {donateUrl && (
-              <a href={donateUrl} target="_blank" rel="noopener noreferrer"
+              <button
+                onClick={() => setDonateOpen(true)}
                 className="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-5 py-2.5 rounded-full font-semibold text-sm transition-all hover:-translate-y-0.5">
                 <Heart size={14} className="fill-white" /> {donateText}
-              </a>
+              </button>
             )}
           </div>
 
@@ -137,5 +141,6 @@ export default function Footer() {
         </div>
       </div>
     </footer>
+    {donateOpen && <DonateModal onClose={() => setDonateOpen(false)} />}
   );
 }
