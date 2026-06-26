@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import DonateModal from '../components/DonateModal';
 import { Link } from 'react-router';
 import { Play, Pause, SkipForward, SkipBack, Music, Palette, TrendingUp, Calendar, ArrowRight, Heart, Phone, Send, Mail, MapPin, Briefcase, Download } from 'lucide-react';
 import { toast } from 'sonner';
@@ -27,6 +28,7 @@ export default function Home() {
   const [currentTrack, setCurrentTrack] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [contactSending, setContactSending] = useState(false);
+  const [donateOpen, setDonateOpen] = useState(false);
 
   const tracksRef = useRef<HomeTrack[]>([]);
   useEffect(() => { tracksRef.current = musicTracks; }, [musicTracks]);
@@ -137,10 +139,11 @@ export default function Home() {
                 <Heart size={18} /> Get In Touch
               </Link>
               {donateUrl && (
-                <a href={donateUrl} target="_blank" rel="noopener noreferrer"
+                <button
+                  onClick={() => setDonateOpen(true)}
                   className="inline-flex items-center gap-2 bg-amber-500 text-white px-6 py-3.5 rounded-full font-semibold hover:bg-amber-600 hover:-translate-y-0.5 transition-all shadow-[0_4px_20px_rgba(245,158,11,0.3)]">
                   <Heart size={18} className="fill-white" /> {donateText}
-                </a>
+                </button>
               )}
             </div>
             <div className="flex items-center gap-4">
@@ -501,6 +504,7 @@ export default function Home() {
       )}
 
       <Footer />
+      {donateOpen && <DonateModal onClose={() => setDonateOpen(false)} />}
     </div>
   );
 }
