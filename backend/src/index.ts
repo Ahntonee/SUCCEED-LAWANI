@@ -39,10 +39,12 @@ app.use(helmet({
 
 // ─── CORS ─────────────────────────────────────────────────────────────────────
 const allowedOrigins = [
-  process.env.FRONTEND_URL || 'http://localhost:3000',
+  process.env.FRONTEND_URL,
+  'https://www.succeedlawani.com',
+  'https://succeedlawani.com',
   'http://localhost:3000',
   'http://localhost:5173',
-];
+].filter(Boolean) as string[];
 app.use(cors({
   origin: (origin, callback) => {
     // Allow requests with no origin (e.g., Postman, curl, server-to-server)
