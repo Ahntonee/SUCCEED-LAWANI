@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
+import { Link, useSearchParams } from 'react-router';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { Calendar, Clock, ArrowRight, User, Tag, Search } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { api } from '../lib/api';
 
 interface BlogPost {
@@ -22,9 +22,14 @@ interface BlogPost {
 export default function Blog() {
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeCategory, setActiveCategory] = useState('All');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeCategory = searchParams.get('category') || 'All';
+
+  const setActiveCategory = (cat: string) => {
+    if (cat === 'All') setSearchParams({});
+    else setSearchParams({ category: cat });
+  };
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -119,21 +124,21 @@ export default function Blog() {
                       {featuredPost.category}
                     </span>
                   </div>
-                  <h2 className="text-2xl md:text-3xl font-bold text-[#0f172a] mb-4 hover:text-[#0d9488] transition-colors cursor-pointer" onClick={() => setSelectedPost(featuredPost)}>
+                  <Link to={`/blog/${featuredPost.id}`} className="text-2xl md:text-3xl font-bold text-[#0f172a] mb-4 hover:text-[#0d9488] transition-colors block">
                     {featuredPost.title}
-                  </h2>
+                  </Link>
                   <p className="text-[#64748b] mb-6 leading-relaxed">{featuredPost.excerpt}</p>
                   <div className="flex items-center gap-4 text-sm text-[#64748b] mb-6">
                     <span className="flex items-center gap-1"><User size={14} /> {featuredPost.author}</span>
                     <span className="flex items-center gap-1"><Calendar size={14} /> {featuredPost.date}</span>
                     <span className="flex items-center gap-1"><Clock size={14} /> {featuredPost.readTime}</span>
                   </div>
-                  <button
-                    onClick={() => setSelectedPost(featuredPost)}
+                  <Link
+                    to={`/blog/${featuredPost.id}`}
                     className="inline-flex items-center gap-2 text-[#0d9488] font-semibold hover:gap-3 transition-all self-start"
                   >
                     Read Full Story <ArrowRight size={16} />
-                  </button>
+                  </Link>
                 </div>
               </div>
             </div>
@@ -154,9 +159,10 @@ export default function Blog() {
           )}
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {regularPosts.map((post) => (
-              <div
+              <Link
                 key={post.id}
-                className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 group"
+                to={`/blog/${post.id}`}
+                className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 group block"
               >
                 <div className="h-48 overflow-hidden">
                   <img
@@ -171,10 +177,7 @@ export default function Blog() {
                       {post.category}
                     </span>
                   </div>
-                  <h3
-                    className="text-lg font-bold text-[#0f172a] mb-2 group-hover:text-[#0d9488] transition-colors cursor-pointer line-clamp-2"
-                    onClick={() => setSelectedPost(post)}
-                  >
+                  <h3 className="text-lg font-bold text-[#0f172a] mb-2 group-hover:text-[#0d9488] transition-colors line-clamp-2">
                     {post.title}
                   </h3>
                   <p className="text-[#64748b] text-sm mb-4 line-clamp-3 leading-relaxed">{post.excerpt}</p>
@@ -188,47 +191,11 @@ export default function Blog() {
                     ))}
                   </div>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         </div>
       </section>
-
-      {/* Article Dialog */}
-      <Dialog open={!!selectedPost} onOpenChange={() => setSelectedPost(null)}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-[#0f172a] leading-tight">
-              {selectedPost?.title}
-            </DialogTitle>
-          </DialogHeader>
-          {selectedPost && (
-            <div className="mt-4">
-              <img
-                src={selectedPost.image}
-                alt={selectedPost.title}
-                className="w-full h-56 object-cover rounded-xl mb-4"
-              />
-              <div className="flex flex-wrap items-center gap-3 mb-4 text-sm text-[#64748b]">
-                <span className="flex items-center gap-1"><User size={14} /> {selectedPost.author}</span>
-                <span className="flex items-center gap-1"><Calendar size={14} /> {selectedPost.date}</span>
-                <span className="flex items-center gap-1"><Clock size={14} /> {selectedPost.readTime}</span>
-                <span className="bg-[#0d9488]/10 text-[#0d9488] font-semibold px-2 py-0.5 rounded-full text-xs">{selectedPost.category}</span>
-              </div>
-              <div className="flex flex-wrap gap-2 mb-6">
-                {selectedPost.tags.map((tag) => (
-                  <span key={tag} className="text-xs bg-gray-100 text-gray-600 px-3 py-1 rounded-full flex items-center gap-1">
-                    <Tag size={10} /> {tag}
-                  </span>
-                ))}
-              </div>
-              <div className="text-[#64748b] leading-relaxed whitespace-pre-line">
-                {selectedPost.content}
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
 
       <Footer />
     </div>

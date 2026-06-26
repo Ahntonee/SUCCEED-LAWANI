@@ -41,6 +41,7 @@ export default function Footer() {
   const business   = content.business_name || 'TheSucceedeer Designs & Digital Agency';
 
   return (
+    <>
     <footer className="bg-[#0f172a] text-white pt-16 pb-6">
       <div className="max-w-[1400px] mx-auto px-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
@@ -142,5 +143,6 @@ export default function Footer() {
       </div>
     </footer>
     {donateOpen && <DonateModal onClose={() => setDonateOpen(false)} />}
+    </>
   );
 }

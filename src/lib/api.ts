@@ -95,6 +95,8 @@ export const api = {
     const q = params ? '?' + new URLSearchParams(params).toString() : '';
     return request(`/blog${q}`);
   },
+  getPublicPost: (id: number) => request(`/blog/${id}`),
+  recordPostView: (id: number) => request(`/blog/${id}/view`, { method: 'POST' }),
   submitContact: (data: object) =>
     request('/contacts', { method: 'POST', body: JSON.stringify(data) }),
   submitRsvp: (eventId: number, data: object) =>
