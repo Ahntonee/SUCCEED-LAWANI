@@ -91,7 +91,7 @@ router.get('/products', wrapAsync(async (req, res) => {
     if (tag) where.tags = { contains: String(tag) };
     if (search) where.name = { contains: String(search), mode: 'insensitive' };
     const products = await prisma.product.findMany({ where, orderBy: { createdAt: 'desc' } });
-    res.json(products.map(withParsed));
+    res.json(products.map(withParsedLists));
   } catch {
     res.status(500).json({ error: 'Failed to load products' });
   }
