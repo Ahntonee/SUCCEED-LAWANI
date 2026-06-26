@@ -38,7 +38,7 @@ export default function Footer() {
   const phone      = content.phone       || '+234 813 478 1588';
   const email      = content.email       || 'hello@succeedlawani.com';
   const location   = content.location    || 'Lagos, Nigeria';
-  const business   = content.business_name || 'TheSucceedeer Designs & Digital Agency';
+  const business   = content.business_name || 'Succeeder Designs & Digital Agency';
 
   return (
     <>
@@ -137,7 +137,7 @@ export default function Footer() {
         <div className="border-t border-white/10 pt-6 text-center">
           <p className="text-white/50 text-sm flex items-center justify-center gap-1">
             &copy; {new Date().getFullYear()} Succeed Michael Lawani. All Rights Reserved. | Designed with{' '}
-            <Heart size={14} className="text-[#0d9488] fill-[#0d9488]" /> by TheSucceedeer Designs
+            <Heart size={14} className="text-[#0d9488] fill-[#0d9488]" /> by Succeeder Designs
           </p>
         </div>
       </div>

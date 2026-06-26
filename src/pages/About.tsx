@@ -6,7 +6,7 @@ import { useSiteContent } from '../context/SiteContentContext';
 
 const milestones = [
   { year: '2018', title: 'Started Music Career', desc: 'Released debut single "Rise Up" which gained 100K+ streams in the first month.' },
-  { year: '2019', title: 'Founded TheSucceedeer Designs', desc: 'Launched bespoke fashion brand specializing in premium African and contemporary wear.' },
+  { year: '2019', title: 'Founded Succeeder Designs', desc: 'Launched bespoke fashion brand specializing in premium African and contemporary wear.' },
   { year: '2020', title: 'Digital Marketing Certification', desc: 'Earned DMI Pro certification and began managing campaigns for major Nigerian brands.' },
   { year: '2021', title: 'First Major Concert', desc: 'Sold-out debut concert in Lagos with 5,000+ attendees.' },
   { year: '2023', title: 'Fashion Week Showcase', desc: 'Featured collection at Lagos Fashion Week, gaining international recognition.' },

@@ -10,7 +10,7 @@ import { useAudioPlayer, formatTime, downloadTrack } from '../hooks/useAudioPlay
 
 const services = [
   { icon: Music,      title: 'Music',            desc: 'Creating inspirational and soulful music that resonates with hearts across the globe. From Daily Miracles to Philistine.', link: '/music' },
-  { icon: Palette,    title: 'Fashion Design',    desc: 'TheSucceedeer Designs — crafting exquisite male & female suits, traditional Agbada, and contemporary African styles.',     link: '/about' },
+  { icon: Palette,    title: 'Fashion Design',    desc: 'Succeeder Designs — crafting exquisite male & female suits, traditional Agbada, and contemporary African styles.',     link: '/about' },
   { icon: TrendingUp, title: 'Digital Marketing', desc: 'Expert in Facebook Ads, DMI, optimization, and growth strategies for brands looking to scale their digital presence.',        link: '/blog' },
   { icon: Calendar,   title: 'Events & Booking',  desc: 'Available for performances, speaking engagements, fashion shows, and digital marketing consultations worldwide.',            link: '/events' },
 ];
@@ -127,7 +127,7 @@ export default function Home() {
               <span className="text-[#0d9488]">Every Time</span>
             </h1>
             <p className="text-[#64748b] text-lg leading-relaxed mb-8 max-w-lg">
-              {content.hero_subtext || 'Succeed Michael Lawani is a multi-talented creative force — a passionate musician, innovative fashion designer behind TheSucceedeer Designs, and a results-driven digital marketing expert.'}
+              {content.hero_subtext || 'Succeed Michael Lawani is a multi-talented creative force — a passionate musician, innovative fashion designer behind Succeeder Designs, and a results-driven digital marketing expert.'}
             </p>
             <div className="flex flex-wrap gap-4 mb-10">
               <Link to="/music" className="inline-flex items-center gap-2 bg-[#0d9488] text-white px-6 py-3.5 rounded-full font-semibold hover:bg-[#0f766e] hover:-translate-y-0.5 transition-all shadow-[0_4px_20px_rgba(13,148,136,0.3)]">
@@ -278,7 +278,7 @@ export default function Home() {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
               <h2 className="text-3xl md:text-4xl font-bold text-[#0f172a] mb-4">
-                TheSucceedeer <span className="text-[#0d9488]">Designs</span>
+                Succeeder <span className="text-[#0d9488]">Designs</span>
               </h2>
               <p className="text-[#64748b] leading-relaxed mb-6">
                 Premium fashion for the modern individual. From bespoke male and female suits to traditional Agbada and contemporary African styles — every piece is crafted with precision, passion, and an unwavering commitment to excellence.
@@ -432,7 +432,7 @@ export default function Home() {
                   { icon: Phone,    label: 'Phone',    value: content.phone         || '+234 813 478 1588' },
                   { icon: Mail,     label: 'Email',    value: content.email         || 'hello@succeedlawani.com' },
                   { icon: MapPin,   label: 'Location', value: content.location      || 'Lagos, Nigeria' },
-                  { icon: Briefcase,label: 'Business', value: content.business_name || 'TheSucceedeer Designs & Digital Agency' },
+                  { icon: Briefcase,label: 'Business', value: content.business_name || 'Succeeder Designs & Digital Agency' },
                 ].map((item) => (
                   <div key={item.label} className="flex items-center gap-4">
                     <div className="w-12 h-12 bg-[#0d9488] rounded-xl flex items-center justify-center text-white">

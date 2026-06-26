@@ -61,7 +61,7 @@ const sections: ContentSection[] = [
       { key: 'phone', label: 'Phone Number', placeholder: '+234 813 478 1588' },
       { key: 'email', label: 'Email Address', placeholder: 'hello@succeedlawani.com' },
       { key: 'location', label: 'Location', placeholder: 'Lagos, Nigeria' },
-      { key: 'business_name', label: 'Business Name', placeholder: 'TheSucceedeer Designs & Digital Agency' },
+      { key: 'business_name', label: 'Business Name', placeholder: 'Succeeder Designs & Digital Agency' },
     ],
   },
   {

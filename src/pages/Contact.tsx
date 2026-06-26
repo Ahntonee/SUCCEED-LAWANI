@@ -30,7 +30,7 @@ const contactInfo = [
   {
     icon: Briefcase,
     title: 'Business',
-    value: 'TheSucceedeer Designs & Digital Agency',
+    value: 'Succeeder Designs & Digital Agency',
     link: '#',
     description: 'Fashion, Music & Marketing',
   },
@@ -264,7 +264,7 @@ export default function Contact() {
                 <div className="space-y-4">
                   {[
                     { q: 'How far in advance should I book?', a: 'For events and performances, at least 4-6 weeks in advance. For fashion orders, 2-3 weeks is ideal.' },
-                    { q: 'Do you offer international shipping?', a: 'Yes! TheSucceedeer Designs ships worldwide via DHL and FedEx with tracking.' },
+                    { q: 'Do you offer international shipping?', a: 'Yes! Succeeder Designs ships worldwide via DHL and FedEx with tracking.' },
                     { q: 'Can I get a custom song written?', a: 'Absolutely. I create custom songs for weddings, anniversaries, corporate events, and special occasions.' },
                     { q: 'What marketing services do you offer?', a: 'Facebook/Instagram Ads, Google Ads, SEO, content strategy, brand consulting, and training workshops.' },
                   ].map((faq, i) => (
