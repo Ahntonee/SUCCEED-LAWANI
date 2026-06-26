@@ -74,10 +74,10 @@ export const api = {
     request('/subscribers', { method: 'POST', body: JSON.stringify({ email }) }),
 
   // File upload (admin)
-  uploadImage: async (file: File): Promise<string> => {
+  uploadFile: async (file: File, field: 'image' | 'audio'): Promise<string> => {
     const token = getToken();
     const form = new FormData();
-    form.append('image', file);
+    form.append(field, file);
     const res = await fetch(`${BASE}/upload`, {
       method: 'POST',
       headers: token ? { Authorization: `Bearer ${token}` } : {},
@@ -87,19 +87,8 @@ export const api = {
     if (!res.ok) throw new Error(data.error || 'Upload failed');
     return data.url as string;
   },
-  uploadAudio: async (file: File): Promise<string> => {
-    const token = getToken();
-    const form = new FormData();
-    form.append('audio', file);
-    const res = await fetch(`${BASE}/upload`, {
-      method: 'POST',
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-      body: form,
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Upload failed');
-    return data.url as string;
-  },
+  uploadImage: (file: File) => api.uploadFile(file, 'image'),
+  uploadAudio: (file: File) => api.uploadFile(file, 'audio'),
 
   // Public — no auth required
   getPublicPosts: (params?: Record<string, string>) => {

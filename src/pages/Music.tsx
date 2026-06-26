@@ -1,9 +1,10 @@
-import { useEffect, useState, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { Play, Pause, SkipForward, SkipBack, Download, Music2, Disc3, Star, Headphones, ImageIcon } from 'lucide-react';
 import { api } from '../lib/api';
 import { useSiteContent } from '../context/SiteContentContext';
+import { useAudioPlayer, formatTime, downloadTrack } from '../hooks/useAudioPlayer';
 
 interface Track {
   id: number;
@@ -26,20 +27,31 @@ interface Album {
 }
 
 export default function Music() {
-  const content = useSiteContent();
+  const { content } = useSiteContent();
   const [tracks, setTracks] = useState<Track[]>([]);
   const [albums, setAlbums] = useState<Album[]>([]);
   const [streamingLinks, setStreamingLinks] = useState<{ id: number; platform: string; url: string }[]>([]);
   const [currentTrack, setCurrentTrack] = useState<number | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [audioDuration, setAudioDuration] = useState(0);
 
-  const audioRef = useRef<HTMLAudioElement | null>(null);
   const tracksRef = useRef<Track[]>([]);
-  const currentTrackIdRef = useRef<number | null>(null);
   useEffect(() => { tracksRef.current = tracks; }, [tracks]);
+
+  // Auto-advance using functional updater — no stale-closure risk, no extra ref
+  const handleAutoNext = useCallback(() => {
+    setCurrentTrack((prev) => {
+      if (prev === null) return null;
+      const list = tracksRef.current;
+      if (!list.length) return null;
+      const idx = list.findIndex((t) => t.id === prev);
+      return list[(idx + 1) % list.length].id;
+    });
+  }, []);
+
+  const { progress, currentTime, duration: audioDuration, audioRef, seek: handleSeek, resetProgress } = useAudioPlayer(
+    handleAutoNext,
+    () => setIsPlaying(false),
+  );
 
   // ── Fetch data ──────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -49,42 +61,13 @@ export default function Music() {
     api.getStreamingLinks().then(setStreamingLinks).catch(console.error);
   }, []);
 
-  // ── Init audio element once ─────────────────────────────────────────────────
-  useEffect(() => {
-    const audio = new Audio();
-    audioRef.current = audio;
-
-    audio.ontimeupdate = () => {
-      if (audio.duration) {
-        setCurrentTime(audio.currentTime);
-        setProgress((audio.currentTime / audio.duration) * 100);
-        setAudioDuration(audio.duration);
-      }
-    };
-    audio.onloadedmetadata = () => setAudioDuration(audio.duration);
-    audio.onended = () => {
-      const list = tracksRef.current;
-      if (!list.length) return;
-      const curr = currentTrackIdRef.current;
-      const idx = list.findIndex((t) => t.id === curr);
-      const next = list[(idx + 1) % list.length];
-      currentTrackIdRef.current = next.id;
-      setCurrentTrack(next.id);
-      setCurrentTime(0);
-      setProgress(0);
-    };
-    audio.onerror = () => setIsPlaying(false);
-
-    return () => { audio.pause(); audio.src = ''; };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
   // Update src when track changes
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio || currentTrack === null) return;
     const track = tracksRef.current.find((t) => t.id === currentTrack);
     if (!track) return;
-    currentTrackIdRef.current = currentTrack;
+    resetProgress();
     if (track.audioUrl) {
       audio.src = track.audioUrl;
       audio.load();
@@ -93,20 +76,14 @@ export default function Music() {
       audio.src = '';
       setIsPlaying(false);
     }
-    setCurrentTime(0);
-    setProgress(0);
-    setAudioDuration(0);
   }, [currentTrack]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Play / pause toggle
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
-    if (isPlaying && audio.src) {
-      audio.play().catch(() => setIsPlaying(false));
-    } else {
-      audio.pause();
-    }
+    if (isPlaying && audio.src) audio.play().catch(() => setIsPlaying(false));
+    else audio.pause();
   }, [isPlaying]);
 
   const handlePlay = (trackId: number) => {
@@ -123,7 +100,6 @@ export default function Music() {
     if (!currentTrack || !list.length) return;
     const idx = list.findIndex((t) => t.id === currentTrack);
     setCurrentTrack(list[(idx + 1) % list.length].id);
-    setProgress(0);
   };
 
   const handlePrev = () => {
@@ -131,32 +107,9 @@ export default function Music() {
     if (!currentTrack || !list.length) return;
     const idx = list.findIndex((t) => t.id === currentTrack);
     setCurrentTrack(list[(idx - 1 + list.length) % list.length].id);
-    setProgress(0);
   };
 
-  const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
-    const audio = audioRef.current;
-    if (!audio || !audio.duration) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    audio.currentTime = ((e.clientX - rect.left) / rect.width) * audio.duration;
-  };
-
-  const formatTime = (s: number) => {
-    if (!s || isNaN(s)) return '0:00';
-    const m = Math.floor(s / 60);
-    const sec = Math.floor(s % 60);
-    return `${m}:${sec < 10 ? '0' : ''}${sec}`;
-  };
-
-  const handleDownload = (track: Track) => {
-    if (!track.audioUrl) return;
-    const url = track.audioUrl.includes('cloudinary')
-      ? track.audioUrl.replace('/upload/', '/upload/fl_attachment/')
-      : track.audioUrl;
-    const a = document.createElement('a');
-    a.href = url; a.download = track.title; a.target = '_blank';
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  };
+  const handleDownload = (track: Track) => downloadTrack(track.audioUrl, track.title);
 
   const currentTrackData = tracks.find((t) => t.id === currentTrack);
 

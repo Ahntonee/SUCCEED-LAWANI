@@ -5,7 +5,7 @@ import { useSiteContent } from '../context/SiteContentContext';
 import DonateModal from './DonateModal';
 
 export default function FloatingDonate() {
-  const content = useSiteContent();
+  const { content } = useSiteContent();
   const location = useLocation();
   const [open, setOpen] = useState(false);
 

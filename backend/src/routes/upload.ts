@@ -1,3 +1,5 @@
+import fs from 'fs';
+import path from 'path';
 import { Router, Request, Response, NextFunction } from 'express';
 import multer from 'multer';
 import { v2 as cloudinary } from 'cloudinary';
@@ -34,14 +36,20 @@ const upload = multer({
 });
 
 // ─── Upload Route ─────────────────────────────────────────────────────────────
+// Accept at most one file under the 'image' OR 'audio' field name.
+// upload.any() was replaced to prevent clients from flooding memory with
+// many file fields (each up to 50 MB) in a single request.
 router.post(
   '/',
   requireAuth,
-  upload.any(),
+  upload.fields([
+    { name: 'image', maxCount: 1 },
+    { name: 'audio', maxCount: 1 },
+  ]),
   async (req: Request, res: Response) => {
     try {
-      const files = req.files as Express.Multer.File[];
-      const file = files?.[0];
+      const fieldMap = req.files as Record<string, Express.Multer.File[]> | undefined;
+      const file = fieldMap?.image?.[0] ?? fieldMap?.audio?.[0];
       if (!file) { res.status(400).json({ error: 'No file uploaded' }); return; }
 
       // ── Cloudinary upload (production) ─────────────────────────────────────
@@ -63,13 +71,18 @@ router.post(
         return;
       }
 
-      // ── Local fallback (development only) ──────────────────────────────────
-      // WARNING: This stores files on disk — not for production use on Render.
-      // Set CLOUDINARY_* env vars to enable persistent cloud storage.
-      console.warn('⚠️  Cloudinary not configured. Serving file from memory (dev only).');
-      const base64 = file.buffer.toString('base64');
-      const dataUrl = `data:${file.mimetype};base64,${base64}`;
-      res.json({ url: dataUrl });
+      // ── Local disk fallback ────────────────────────────────────────────────
+      // Saves to backend/uploads/ and returns a /api/uploads/<file> URL.
+      // nginx already proxies /api/* to this server, so the URL is publicly
+      // reachable without any extra nginx config. Set CLOUDINARY_* env vars
+      // for proper cloud storage; this fallback works but files are local-only.
+      console.warn('⚠️  Cloudinary not configured. Saving to local disk (/api/uploads/).');
+      const uploadsDir = path.join(__dirname, '../../uploads');
+      if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+      const ext = path.extname(file.originalname) || (file.mimetype.startsWith('audio/') ? '.mp3' : '.jpg');
+      const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}${ext}`;
+      fs.writeFileSync(path.join(uploadsDir, filename), file.buffer);
+      res.json({ url: `/api/uploads/${filename}` });
 
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Upload failed';

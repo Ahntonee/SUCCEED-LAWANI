@@ -6,6 +6,10 @@ import prisma from '../db/prisma';
 import { requireAuth } from '../middleware/auth';
 import { sendOrderConfirmation } from '../services/email';
 import { wrapAsync } from '../utils/wrapAsync';
+import { parseList, serializeList, withParsedLists } from '../utils/listHelpers';
+
+const ORDER_STATUSES = ['pending', 'paid', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded'] as const;
+type OrderStatus = typeof ORDER_STATUSES[number];
 
 const router = Router();
 
@@ -40,18 +44,7 @@ const flutterwaveVerifySchema = customerSchema.extend({
   items: z.array(cartItemSchema).min(1).max(50),
 });
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-function parseList(raw: string): string[] {
-  return raw ? raw.split(',').map((s) => s.trim()).filter(Boolean) : [];
-}
-function serializeList(arr: unknown): string {
-  if (Array.isArray(arr)) return arr.join(',');
-  if (typeof arr === 'string') return arr;
-  return '';
-}
-function withParsed<T extends { images: string; tags: string }>(p: T) {
-  return { ...p, images: parseList(p.images), tags: parseList(p.tags) };
-}
+// parseList / serializeList / withParsedLists imported from listHelpers
 
 // Calculate server-side total from DB prices
 async function calcServerTotal(items: { id: number; qty: number }[]) {
@@ -110,7 +103,7 @@ router.get('/products/:id', async (req: Request, res: Response) => {
     if (isNaN(id)) { res.status(400).json({ error: 'Invalid product ID' }); return; }
     const product = await prisma.product.findUnique({ where: { id } });
     if (!product) { res.status(404).json({ error: 'Not found' }); return; }
-    res.json(withParsed(product));
+    res.json(withParsedLists(product));
   } catch {
     res.status(500).json({ error: 'Failed to load product' });
   }
@@ -123,7 +116,7 @@ router.post('/products', requireAuth, async (req: Request, res: Response) => {
     const product = await prisma.product.create({
       data: { ...rest, images: serializeList(images), tags: serializeList(tags) },
     });
-    res.status(201).json(withParsed(product));
+    res.status(201).json(withParsedLists(product));
   } catch (err) {
     console.error('Create product error:', err);
     res.status(500).json({ error: 'Failed to create product' });
@@ -137,7 +130,7 @@ router.patch('/products/:id', requireAuth, async (req: Request, res: Response) =
     if (images !== undefined) data.images = serializeList(images);
     if (tags !== undefined) data.tags = serializeList(tags);
     const product = await prisma.product.update({ where: { id: Number(req.params.id) }, data });
-    res.json(withParsed(product));
+    res.json(withParsedLists(product));
   } catch {
     res.status(500).json({ error: 'Failed to update product' });
   }
@@ -174,11 +167,14 @@ router.get('/orders', requireAuth, async (req: Request, res: Response) => {
 
 router.patch('/orders/:id', requireAuth, async (req: Request, res: Response) => {
   try {
-    // Only allow updating safe fields (no overwriting items or payment data)
     const { status } = req.body;
+    if (!ORDER_STATUSES.includes(status as OrderStatus)) {
+      res.status(400).json({ error: `Invalid status. Allowed: ${ORDER_STATUSES.join(', ')}` });
+      return;
+    }
     const order = await prisma.order.update({
       where: { id: Number(req.params.id) },
-      data: { status },
+      data: { status: status as OrderStatus },
     });
     res.json({ ...order, items: JSON.parse(order.items) });
   } catch {

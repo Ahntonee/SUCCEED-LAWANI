@@ -21,7 +21,7 @@ const navItems = [
 ];
 
 export default function AdminLayout() {
-  const content = useSiteContent();
+  const { content } = useSiteContent();
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);

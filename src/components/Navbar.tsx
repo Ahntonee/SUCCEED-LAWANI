@@ -14,7 +14,7 @@ const navLinks = [
 ];
 
 export default function Navbar() {
-  const content = useSiteContent();
+  const { content } = useSiteContent();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();

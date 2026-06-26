@@ -1,19 +1,11 @@
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
 
 /**
- * Wraps an async route handler in try-catch.
- * Logs the error server-side and returns a safe 500 to the client.
+ * Wraps an async route handler and forwards unhandled errors to Express's
+ * error-handling middleware (app.use((err, req, res, next) => ...)).
  */
-export function wrapAsync(fn: (req: Request, res: Response) => Promise<void>) {
-  return async (req: Request, res: Response) => {
-    try {
-      await fn(req, res);
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      console.error(`[${req.method} ${req.path}] Error: ${msg}`);
-      if (!res.headersSent) {
-        res.status(500).json({ error: 'Internal server error' });
-      }
-    }
+export function wrapAsync(fn: (req: Request, res: Response, next: NextFunction) => Promise<void>) {
+  return (req: Request, res: Response, next: NextFunction) => {
+    fn(req, res, next).catch(next);
   };
 }

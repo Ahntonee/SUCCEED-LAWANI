@@ -31,7 +31,7 @@ const values = [
 ];
 
 export default function About() {
-  const content = useSiteContent();
+  const { content } = useSiteContent();
   useEffect(() => { window.scrollTo(0, 0); }, []);
 
   // Portrait: about_portrait takes priority, fallback to hero_image, fallback to placeholder

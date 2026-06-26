@@ -22,7 +22,7 @@ const services = [
 ];
 
 export default function Footer() {
-  const content = useSiteContent();
+  const { content } = useSiteContent();
   const [donateOpen, setDonateOpen] = useState(false);
 
   const socialLinks = [

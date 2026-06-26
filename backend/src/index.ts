@@ -56,7 +56,9 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 
 // ─── Static Uploads ───────────────────────────────────────────────────────────
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+// /uploads for direct access; /api/uploads so nginx's /api/ proxy forwards it.
+app.use('/uploads',     express.static(path.join(__dirname, '../uploads')));
+app.use('/api/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // ─── Routes ───────────────────────────────────────────────────────────────────
 app.use('/api/auth', authRoutes);

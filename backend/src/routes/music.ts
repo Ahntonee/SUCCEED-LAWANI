@@ -36,13 +36,24 @@ router.post('/tracks/:id/download', wrapAsync(async (req, res) => {
 }));
 
 // ─── ADMIN ────────────────────────────────────────────────────────────────────
+// Allowlist writable Track fields — prevents mass-assignment of id, playCount, etc.
+const TRACK_FIELDS = ['title', 'album', 'duration', 'cover', 'audioUrl', 'featured', 'order'] as const;
+function pickTrackFields(body: Record<string, unknown>) {
+  return Object.fromEntries(TRACK_FIELDS.filter((k) => k in body).map((k) => [k, body[k]]));
+}
+
+const ALBUM_FIELDS = ['title', 'year', 'type', 'cover', 'trackCount', 'description'] as const;
+function pickAlbumFields(body: Record<string, unknown>) {
+  return Object.fromEntries(ALBUM_FIELDS.filter((k) => k in body).map((k) => [k, body[k]]));
+}
+
 router.post('/tracks', requireAuth, wrapAsync(async (req, res) => {
-  const track = await prisma.track.create({ data: req.body });
+  const track = await prisma.track.create({ data: pickTrackFields(req.body) as Parameters<typeof prisma.track.create>[0]['data'] });
   res.status(201).json(track);
 }));
 
 router.patch('/tracks/:id', requireAuth, wrapAsync(async (req, res) => {
-  const track = await prisma.track.update({ where: { id: Number(req.params.id) }, data: req.body });
+  const track = await prisma.track.update({ where: { id: Number(req.params.id) }, data: pickTrackFields(req.body) });
   res.json(track);
 }));
 
@@ -52,12 +63,12 @@ router.delete('/tracks/:id', requireAuth, wrapAsync(async (req, res) => {
 }));
 
 router.post('/albums', requireAuth, wrapAsync(async (req, res) => {
-  const album = await prisma.album.create({ data: req.body });
+  const album = await prisma.album.create({ data: pickAlbumFields(req.body) as Parameters<typeof prisma.album.create>[0]['data'] });
   res.status(201).json(album);
 }));
 
 router.patch('/albums/:id', requireAuth, wrapAsync(async (req, res) => {
-  const album = await prisma.album.update({ where: { id: Number(req.params.id) }, data: req.body });
+  const album = await prisma.album.update({ where: { id: Number(req.params.id) }, data: pickAlbumFields(req.body) });
   res.json(album);
 }));
 
@@ -67,7 +78,8 @@ router.delete('/albums/:id', requireAuth, wrapAsync(async (req, res) => {
 }));
 
 router.patch('/streaming-links/:id', requireAuth, wrapAsync(async (req, res) => {
-  const link = await prisma.streamingLink.update({ where: { id: Number(req.params.id) }, data: req.body });
+  const { url, active } = req.body;
+  const link = await prisma.streamingLink.update({ where: { id: Number(req.params.id) }, data: { url, active } });
   res.json(link);
 }));
 

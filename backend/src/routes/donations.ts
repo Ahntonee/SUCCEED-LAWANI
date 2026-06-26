@@ -60,7 +60,9 @@ router.get('/verify/:reference', async (req: Request, res: Response) => {
     if (!donation) { res.status(404).json({ error: 'Donation not found' }); return; }
     if (donation.status === 'paid') { res.json({ status: 'paid', donation }); return; }
 
-    // Attempt server-side verification if a secret key is configured
+    // If a secret key is configured, verify server-side (authoritative check).
+    // Do NOT fall through to "trust client" when the key is present — that
+    // would let anyone mark a donation paid by triggering a network error.
     const secret = process.env.FLUTTERWAVE_SECRET_KEY || '';
     if (secret) {
       try {
@@ -75,10 +77,18 @@ router.get('/verify/:reference', async (req: Request, res: Response) => {
           res.json({ status: 'paid', donation: { ...donation, status: 'paid' } });
           return;
         }
-      } catch { /* fall through */ }
+        // Verification succeeded but payment was not complete
+        res.status(402).json({ status: 'pending', error: 'Payment not confirmed by Flutterwave.' });
+        return;
+      } catch (verifyErr) {
+        // Network / parse failure — return pending instead of silently approving
+        console.error('[donations/verify] Flutterwave unreachable:', (verifyErr as Error).message);
+        res.status(502).json({ status: 'pending', error: 'Could not reach Flutterwave. Please try again.' });
+        return;
+      }
     }
 
-    // Flutterwave popup callback already confirmed the payment client-side; trust it
+    // No secret key — trust the client-side Flutterwave popup callback
     await prisma.donation.update({ where: { reference }, data: { status: 'paid', paidAt: new Date() } });
     res.json({ status: 'paid', donation: { ...donation, status: 'paid' } });
   } catch (err) {

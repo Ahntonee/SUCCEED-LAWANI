@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { Link } from 'react-router';
@@ -6,6 +6,7 @@ import { Play, Pause, SkipForward, SkipBack, Music, Palette, TrendingUp, Calenda
 import { toast } from 'sonner';
 import { api } from '../lib/api';
 import { useSiteContent } from '../context/SiteContentContext';
+import { useAudioPlayer, formatTime, downloadTrack } from '../hooks/useAudioPlayer';
 
 const services = [
   { icon: Music,      title: 'Music',            desc: 'Creating inspirational and soulful music that resonates with hearts across the globe. From Daily Miracles to Philistine.', link: '/music' },
@@ -19,20 +20,29 @@ interface HomeEvent { day: string; month: string; title: string; description: st
 interface HomeBlogPost { id: number; image: string; category: string; title: string; excerpt: string; }
 
 export default function Home() {
-  const content = useSiteContent();
+  const { content } = useSiteContent();
   const [musicTracks, setMusicTracks] = useState<HomeTrack[]>([]);
   const [events, setEvents] = useState<HomeEvent[]>([]);
   const [blogPosts, setBlogPosts] = useState<HomeBlogPost[]>([]);
   const [currentTrack, setCurrentTrack] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [audioDuration, setAudioDuration] = useState(0);
   const [contactSending, setContactSending] = useState(false);
 
-  const audioRef = useRef<HTMLAudioElement | null>(null);
   const tracksRef = useRef<HomeTrack[]>([]);
   useEffect(() => { tracksRef.current = musicTracks; }, [musicTracks]);
+
+  // Auto-advance to next track when current one ends
+  const handleAutoNext = useCallback(() => {
+    setCurrentTrack((prev) => {
+      const list = tracksRef.current;
+      return list.length ? (prev + 1) % list.length : prev;
+    });
+  }, []);
+
+  const { progress, currentTime, duration: audioDuration, audioRef, seek, resetProgress } = useAudioPlayer(
+    handleAutoNext,
+    () => setIsPlaying(false),
+  );
 
   // ── Fetch data ──────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -42,36 +52,13 @@ export default function Home() {
     api.getPublicPosts().then((data: HomeBlogPost[]) => setBlogPosts(data.slice(0, 3))).catch(console.error);
   }, []);
 
-  // ── Real audio player ───────────────────────────────────────────────────────
-  useEffect(() => {
-    const audio = new Audio();
-    audioRef.current = audio;
-
-    audio.ontimeupdate = () => {
-      if (audio.duration) {
-        setCurrentTime(audio.currentTime);
-        setProgress((audio.currentTime / audio.duration) * 100);
-      }
-    };
-    audio.onloadedmetadata = () => setAudioDuration(audio.duration);
-    audio.onended = () => {
-      const list = tracksRef.current;
-      if (!list.length) return;
-      setCurrentTrack((prev) => (prev + 1) % list.length);
-      setProgress(0);
-      setCurrentTime(0);
-    };
-    audio.onerror = () => setIsPlaying(false);
-
-    return () => { audio.pause(); audio.src = ''; };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
   // Update src when track changes
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
     const track = tracksRef.current[currentTrack];
     if (!track) return;
+    resetProgress();
     if (track.audioUrl) {
       audio.src = track.audioUrl;
       audio.load();
@@ -79,51 +66,28 @@ export default function Home() {
     } else {
       audio.src = '';
     }
-    setCurrentTime(0);
-    setProgress(0);
-    setAudioDuration(0);
   }, [currentTrack]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Play / pause
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
-    if (isPlaying && audio.src) {
-      audio.play().catch(() => setIsPlaying(false));
-    } else {
-      audio.pause();
-    }
+    if (isPlaying && audio.src) audio.play().catch(() => setIsPlaying(false));
+    else audio.pause();
   }, [isPlaying]);
 
   const handlePrev = () => {
     const list = tracksRef.current;
     if (!list.length) return;
     setCurrentTrack((prev) => (prev - 1 + list.length) % list.length);
-    setProgress(0);
   };
   const handleNext = () => {
     const list = tracksRef.current;
     if (!list.length) return;
     setCurrentTrack((prev) => (prev + 1) % list.length);
-    setProgress(0);
   };
 
-  const formatTime = (s: number) => {
-    if (!s || isNaN(s)) return '0:00';
-    const m = Math.floor(s / 60);
-    const sec = Math.floor(s % 60);
-    return `${m}:${sec < 10 ? '0' : ''}${sec}`;
-  };
-
-  const handleDownload = (track: HomeTrack) => {
-    if (!track.audioUrl) return;
-    const url = track.audioUrl.includes('cloudinary')
-      ? track.audioUrl.replace('/upload/', '/upload/fl_attachment/')
-      : track.audioUrl;
-    const a = document.createElement('a');
-    a.href = url; a.download = track.title; a.target = '_blank';
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  };
+  const handleDownload = (track: HomeTrack) => downloadTrack(track.audioUrl, track.title);
 
   const handleContactSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -517,13 +481,7 @@ export default function Home() {
             <div className="flex-1 min-w-0">
               <h4 className="font-semibold text-[#0f172a] text-sm truncate">{musicTracks[currentTrack].title}</h4>
               <p className="text-[#64748b] text-xs">Succeed Michael Lawani</p>
-              <div className="w-full h-1.5 bg-gray-200 rounded-full mt-2 cursor-pointer"
-                onClick={(e) => {
-                  const audio = audioRef.current;
-                  if (!audio || !audio.duration) return;
-                  const rect = e.currentTarget.getBoundingClientRect();
-                  audio.currentTime = ((e.clientX - rect.left) / rect.width) * audio.duration;
-                }}>
+              <div className="w-full h-1.5 bg-gray-200 rounded-full mt-2 cursor-pointer" onClick={seek}>
                 <div className="h-full bg-[#0d9488] rounded-full transition-all duration-100" style={{ width: `${progress}%` }} />
               </div>
               <div className="flex justify-between text-[10px] text-[#64748b] mt-0.5">
