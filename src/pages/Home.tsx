@@ -23,11 +23,11 @@ interface HomeEvent { day: string; month: string; title: string; description: st
 interface HomeBlogPost { id: number; image: string; category: string; title: string; excerpt: string; }
 
 export default function Home() {
-  useSEO({
-    title: 'Succeed Michael Lawani — Music, Fashion & Digital Marketing',
-    description: 'Official website of Succeed Michael Lawani — gospel artist, fashion designer, and digital marketing expert based in Lagos, Nigeria.',
-  });
   const { content } = useSiteContent();
+  useSEO({
+    title: content.seo_home_title || undefined,
+    description: content.seo_home_desc || 'Official website of Succeed Michael Lawani — gospel artist, fashion designer, and digital marketing expert based in Lagos, Nigeria.',
+  });
   const [musicTracks, setMusicTracks] = useState<HomeTrack[]>([]);
   const [events, setEvents] = useState<HomeEvent[]>([]);
   const [blogPosts, setBlogPosts] = useState<HomeBlogPost[]>([]);

@@ -1,30 +1,35 @@
 import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { initGA4, initMetaPixel } from '../lib/analytics';
+import { useSiteContent } from '../context/SiteContentContext';
 
 interface CookiePrefs { analytics: boolean; marketing: boolean }
 const KEY = 'sml_cookie_consent';
 
-function applyConsent(prefs: CookiePrefs) {
-  if (prefs.analytics)  initGA4();
-  if (prefs.marketing) initMetaPixel();
-}
-
 export default function CookieBanner() {
-  const [visible, setVisible] = useState(false);
+  const { content, isLoading } = useSiteContent();
+  const [visible, setVisible]     = useState(false);
   const [showPrefs, setShowPrefs] = useState(false);
-  const [prefs, setPrefs] = useState<CookiePrefs>({ analytics: true, marketing: true });
+  const [prefs, setPrefs]         = useState<CookiePrefs>({ analytics: true, marketing: true });
 
+  // Wait for content (which carries analytics IDs) before applying consent
   useEffect(() => {
+    if (isLoading) return;
     const stored = localStorage.getItem(KEY);
-    if (stored) { applyConsent(JSON.parse(stored)); return; }
+    if (stored) {
+      const saved: CookiePrefs = JSON.parse(stored);
+      if (saved.analytics)  initGA4(content.analytics_ga4_id);
+      if (saved.marketing)  initMetaPixel(content.analytics_pixel_id);
+      return;
+    }
     const t = setTimeout(() => setVisible(true), 1800);
     return () => clearTimeout(t);
-  }, []);
+  }, [isLoading]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const save = (consent: CookiePrefs) => {
     localStorage.setItem(KEY, JSON.stringify(consent));
-    applyConsent(consent);
+    if (consent.analytics) initGA4(content.analytics_ga4_id);
+    if (consent.marketing) initMetaPixel(content.analytics_pixel_id);
     setVisible(false);
   };
 

@@ -6,6 +6,7 @@ import { Calendar, Clock, ArrowRight, User, Tag, Search } from 'lucide-react';
 import { api } from '../lib/api';
 import { useSEO } from '../hooks/useSEO';
 import EmailCaptureCTA from '../components/EmailCaptureCTA';
+import { useSiteContent } from '../context/SiteContentContext';
 
 interface BlogPost {
   id: number;
@@ -22,9 +23,10 @@ interface BlogPost {
 }
 
 export default function Blog() {
+  const { content } = useSiteContent();
   useSEO({
-    title: 'Blog — Music, Fashion & Marketing Insights',
-    description: 'Read Succeed Michael Lawani\'s blog — thoughts on music, fashion, digital marketing, faith, and the creative journey.',
+    title: content.seo_blog_title || 'Blog — Music, Fashion & Marketing Insights',
+    description: content.seo_blog_desc || 'Read Succeed Michael Lawani\'s blog — thoughts on music, fashion, digital marketing, faith, and the creative journey.',
   });
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);

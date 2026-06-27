@@ -2,13 +2,17 @@ import { useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { useSEO } from '../hooks/useSEO';
+import { useSiteContent } from '../context/SiteContentContext';
 
 export default function PrivacyPolicy() {
+  const { content } = useSiteContent();
   useEffect(() => { window.scrollTo(0, 0); }, []);
   useSEO({
     title: 'Privacy Policy',
     description: 'Privacy Policy for succeedlawani.com — how we collect, use, and protect your personal data.',
   });
+
+  const customContent = content.privacy_policy_content;
 
   const sections = [
     {
@@ -71,14 +75,18 @@ export default function PrivacyPolicy() {
           Your privacy is important to us. This policy explains what data we collect, why we collect it, and how we protect it. We are committed to being transparent and complying with applicable data protection laws.
         </p>
 
-        <div className="space-y-8">
-          {sections.map((s) => (
-            <div key={s.title}>
-              <h2 className="text-xl font-bold text-[#0f172a] mb-3">{s.title}</h2>
-              <div className="text-[#475569] leading-relaxed whitespace-pre-line text-[15px]">{s.content}</div>
-            </div>
-          ))}
-        </div>
+        {customContent ? (
+          <div className="text-[#475569] leading-relaxed whitespace-pre-line text-[15px]">{customContent}</div>
+        ) : (
+          <div className="space-y-8">
+            {sections.map((s) => (
+              <div key={s.title}>
+                <h2 className="text-xl font-bold text-[#0f172a] mb-3">{s.title}</h2>
+                <div className="text-[#475569] leading-relaxed whitespace-pre-line text-[15px]">{s.content}</div>
+              </div>
+            ))}
+          </div>
+        )}
 
         <div className="mt-12 p-6 bg-[#f0fdfa] rounded-2xl border border-[#0d9488]/20">
           <h2 className="text-lg font-bold text-[#0f172a] mb-2">Contact us about privacy</h2>

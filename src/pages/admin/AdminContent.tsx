@@ -10,6 +10,8 @@ interface ContentField {
   label: string;
   placeholder?: string;
   multiline?: boolean;
+  rows?: number;
+  note?: string;
   type?: 'image';
 }
 interface ContentSection { title: string; keys: ContentField[]; }
@@ -115,6 +117,54 @@ const sections: ContentSection[] = [
       { key: 'faq_3_a', label: 'Answer 3', multiline: true },
       { key: 'faq_4_q', label: 'Question 4' },
       { key: 'faq_4_a', label: 'Answer 4', multiline: true },
+    ],
+  },
+  {
+    title: 'SEO — Page Titles & Descriptions',
+    keys: [
+      { key: 'seo_home_title',    label: 'Home — Title',       placeholder: 'Music, Fashion & Digital Marketing', note: 'Shown as: [your text] | Succeed Michael Lawani. Leave blank for site default.' },
+      { key: 'seo_home_desc',     label: 'Home — Description', multiline: true, placeholder: 'Official website of Succeed Michael Lawani — gospel artist, fashion designer, and digital marketing expert.' },
+      { key: 'seo_about_title',   label: 'About — Title',      placeholder: 'About', note: 'Shown as: About | Succeed Michael Lawani' },
+      { key: 'seo_about_desc',    label: 'About — Description', multiline: true, placeholder: 'Learn about Succeed Michael Lawani — his journey in gospel music, Succeeder Designs, and digital marketing.' },
+      { key: 'seo_music_title',   label: 'Music — Title',      placeholder: 'Music', note: 'Shown as: Music | Succeed Michael Lawani' },
+      { key: 'seo_music_desc',    label: 'Music — Description', multiline: true, placeholder: 'Stream and download gospel music by Succeed Michael Lawani.' },
+      { key: 'seo_events_title',  label: 'Events — Title',     placeholder: 'Events', note: 'Shown as: Events | Succeed Michael Lawani' },
+      { key: 'seo_events_desc',   label: 'Events — Description', multiline: true, placeholder: 'Upcoming concerts, fashion shows, speaking engagements, and events.' },
+      { key: 'seo_blog_title',    label: 'Blog — Title',       placeholder: 'Blog — Music, Fashion & Marketing Insights', note: 'Shown as: [your text] | Succeed Michael Lawani' },
+      { key: 'seo_blog_desc',     label: 'Blog — Description', multiline: true, placeholder: 'Read Succeed Michael Lawani\'s blog — thoughts on music, fashion, digital marketing, faith, and the creative journey.' },
+      { key: 'seo_contact_title', label: 'Contact — Title',    placeholder: 'Contact', note: 'Shown as: Contact | Succeed Michael Lawani' },
+      { key: 'seo_contact_desc',  label: 'Contact — Description', multiline: true, placeholder: 'Get in touch for bookings, music collaborations, fashion inquiries, and digital marketing consultations.' },
+      { key: 'seo_shop_title',    label: 'Shop — Title',       placeholder: 'Shop — Succeeder Designs & Merch', note: 'Shown as: [your text] | Succeed Michael Lawani' },
+      { key: 'seo_shop_desc',     label: 'Shop — Description', multiline: true, placeholder: 'Shop exclusive fashion pieces, music merch, and digital products from Succeeder Designs.' },
+    ],
+  },
+  {
+    title: 'Email Newsletter CTA',
+    keys: [
+      { key: 'email_cta_title',    label: 'Heading',    placeholder: "Join Succeed's Daily Updates", note: 'Appears in the teal signup section on Home and Blog pages.' },
+      { key: 'email_cta_subtitle', label: 'Subheading', multiline: true, placeholder: 'Get exclusive music releases, fashion drops, and marketing insights delivered to your inbox.' },
+    ],
+  },
+  {
+    title: 'Exit-Intent Popup',
+    keys: [
+      { key: 'exit_popup_title',        label: 'Heading',          placeholder: 'Free Download', note: 'Shown in the top banner of the popup.' },
+      { key: 'exit_popup_body',         label: 'Body text',        multiline: true, placeholder: 'Join Succeed Daily Updates — receive daily inspiration, faith, and transformational messages, plus get the free devotional PDF.' },
+      { key: 'exit_popup_lead_magnet',  label: 'Lead Magnet Name', placeholder: '7 Days Daily Miracle Devotional', note: 'File must be placed at public/lead-magnet.pdf on the server.' },
+    ],
+  },
+  {
+    title: 'Privacy Policy',
+    keys: [
+      { key: 'privacy_policy_content', label: 'Full policy text', multiline: true, rows: 20, placeholder: 'Enter your full privacy policy here. Line breaks are preserved.', note: 'If left blank the default privacy policy is shown. Plain text only — line breaks are preserved.' },
+    ],
+  },
+  {
+    title: 'Analytics & Integrations',
+    keys: [
+      { key: 'analytics_ga4_id',      label: 'Google Analytics 4 — Measurement ID', placeholder: 'G-XXXXXXXXXX',              note: 'From analytics.google.com → Admin → Data Streams. Requires user cookie consent to activate.' },
+      { key: 'analytics_pixel_id',    label: 'Meta Pixel ID',                        placeholder: '1234567890123456',           note: 'From business.facebook.com → Events Manager → Pixels. Requires marketing cookie consent.' },
+      { key: 'analytics_onesignal_id', label: 'OneSignal App ID',                   placeholder: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx', note: 'From onesignal.com → Settings → Keys & IDs.' },
     ],
   },
 ];
@@ -227,8 +277,8 @@ export default function AdminContent() {
                           value={content[f.key] || ''}
                           onChange={(e) => setContent({ ...content, [f.key]: e.target.value })}
                           placeholder={f.placeholder || ''}
-                          rows={3}
-                          className="w-full px-4 py-2.5 rounded-xl border-2 border-gray-200 focus:border-[#0d9488] focus:outline-none text-sm transition-all resize-none"
+                          rows={f.rows || 3}
+                          className="w-full px-4 py-2.5 rounded-xl border-2 border-gray-200 focus:border-[#0d9488] focus:outline-none text-sm transition-all resize-y"
                         />
                       ) : (
                         <input
@@ -238,6 +288,7 @@ export default function AdminContent() {
                           className="w-full px-4 py-2.5 rounded-xl border-2 border-gray-200 focus:border-[#0d9488] focus:outline-none text-sm transition-all"
                         />
                       )}
+                      {f.note && <p className="text-xs text-[#94a3b8] mt-1">{f.note}</p>}
                     </div>
                     <button
                       onClick={() => saveKey(f.key)}

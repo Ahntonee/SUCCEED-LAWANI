@@ -2,8 +2,12 @@ import { useState } from 'react';
 import { Mail, CheckCircle } from 'lucide-react';
 import { api } from '../lib/api';
 import { trackEvent } from '../lib/analytics';
+import { useSiteContent } from '../context/SiteContentContext';
 
 export default function EmailCaptureCTA() {
+  const { content } = useSiteContent();
+  const heading  = content.email_cta_title    || "Join Succeed's Daily Updates";
+  const subtitle = content.email_cta_subtitle || 'Get exclusive music releases, fashion drops, and marketing insights delivered to your inbox.';
   const [email, setEmail]     = useState('');
   const [loading, setLoading] = useState(false);
   const [done, setDone]       = useState(false);
@@ -31,12 +35,8 @@ export default function EmailCaptureCTA() {
         <div className="inline-flex items-center gap-2 bg-white/20 text-white px-4 py-2 rounded-full text-sm font-semibold mb-4">
           <Mail size={16} /> Stay Connected
         </div>
-        <h2 className="text-3xl md:text-4xl font-extrabold text-white mb-3">
-          Join Succeed's Daily Updates
-        </h2>
-        <p className="text-white/80 text-lg mb-8">
-          Get exclusive music releases, fashion drops, and marketing insights delivered to your inbox.
-        </p>
+        <h2 className="text-3xl md:text-4xl font-extrabold text-white mb-3">{heading}</h2>
+        <p className="text-white/80 text-lg mb-8">{subtitle}</p>
 
         {done ? (
           <div className="flex items-center justify-center gap-3 text-white text-lg font-semibold">

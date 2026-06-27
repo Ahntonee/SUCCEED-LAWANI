@@ -28,11 +28,11 @@ interface Album {
 }
 
 export default function Music() {
-  useSEO({
-    title: 'Music — Succeed Michael Lawani',
-    description: 'Stream and download gospel music by Succeed Michael Lawani. Explore albums, singles, and live performances.',
-  });
   const { content } = useSiteContent();
+  useSEO({
+    title: content.seo_music_title || 'Music',
+    description: content.seo_music_desc || 'Stream and download gospel music by Succeed Michael Lawani. Explore albums, singles, and live performances.',
+  });
   const [tracks, setTracks] = useState<Track[]>([]);
   const [albums, setAlbums] = useState<Album[]>([]);
   const [streamingLinks, setStreamingLinks] = useState<{ id: number; platform: string; url: string }[]>([]);

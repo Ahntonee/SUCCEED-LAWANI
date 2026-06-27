@@ -1,8 +1,7 @@
 // ─── Analytics & Tracking ─────────────────────────────────────────────────────
-// To activate, add these to your frontend .env file:
-//   VITE_GA4_ID=G-XXXXXXXXXX          ← from Google Analytics → Admin → Data Streams
-//   VITE_META_PIXEL_ID=1234567890      ← from Meta Business Suite → Events Manager
-//   VITE_ONESIGNAL_APP_ID=xxxx-xxxx   ← from OneSignal → Settings → Keys & IDs
+// IDs can be set via:
+//   A) Admin → Site Content → Analytics & Integrations  (recommended)
+//   B) Frontend .env: VITE_GA4_ID, VITE_META_PIXEL_ID, VITE_ONESIGNAL_APP_ID
 
 declare global {
   interface Window {
@@ -13,21 +12,24 @@ declare global {
   }
 }
 
-const GA4_ID = import.meta.env.VITE_GA4_ID as string | undefined;
-const PIXEL_ID = import.meta.env.VITE_META_PIXEL_ID as string | undefined;
-const ONESIGNAL_ID = import.meta.env.VITE_ONESIGNAL_APP_ID as string | undefined;
+// Fallback to env vars; can be overridden at runtime by passing an id
+const ENV_GA4      = import.meta.env.VITE_GA4_ID as string | undefined;
+const ENV_PIXEL    = import.meta.env.VITE_META_PIXEL_ID as string | undefined;
+const ENV_ONESIGNAL = import.meta.env.VITE_ONESIGNAL_APP_ID as string | undefined;
 
 // ── Google Analytics 4 ────────────────────────────────────────────────────────
-export function initGA4() {
-  if (!GA4_ID) return;
+export function initGA4(idOverride?: string) {
+  const id = idOverride || ENV_GA4;
+  if (!id) return;
+  if (document.querySelector(`script[src*="gtag/js?id=${id}"]`)) return; // already loaded
   const s = document.createElement('script');
   s.async = true;
-  s.src = `https://www.googletagmanager.com/gtag/js?id=${GA4_ID}`;
+  s.src = `https://www.googletagmanager.com/gtag/js?id=${id}`;
   document.head.appendChild(s);
   window.dataLayer = window.dataLayer || [];
   window.gtag = function (...args) { window.dataLayer.push(args); };
   window.gtag('js', new Date());
-  window.gtag('config', GA4_ID, { send_page_view: true });
+  window.gtag('config', id, { send_page_view: true });
 }
 
 export function trackEvent(name: string, params?: Record<string, unknown>) {
@@ -35,8 +37,10 @@ export function trackEvent(name: string, params?: Record<string, unknown>) {
 }
 
 // ── Meta Pixel ────────────────────────────────────────────────────────────────
-export function initMetaPixel() {
-  if (!PIXEL_ID) return;
+export function initMetaPixel(idOverride?: string) {
+  const id = idOverride || ENV_PIXEL;
+  if (!id) return;
+  if (window.fbq) return; // already loaded
   const fbq = function (...args: unknown[]) {
     if (fbq.callMethod) fbq.callMethod(...args); else fbq.queue.push(args);
   } as typeof window.fbq;
@@ -46,7 +50,7 @@ export function initMetaPixel() {
   s.async = true;
   s.src = 'https://connect.facebook.net/en_US/fbevents.js';
   document.head.appendChild(s);
-  window.fbq('init', PIXEL_ID);
+  window.fbq('init', id);
   window.fbq('track', 'PageView');
 }
 
@@ -55,8 +59,10 @@ export function trackPixelEvent(event: string, params?: Record<string, unknown>)
 }
 
 // ── OneSignal Push Notifications ──────────────────────────────────────────────
-export function initOneSignal() {
-  if (!ONESIGNAL_ID) return;
+export function initOneSignal(idOverride?: string) {
+  const id = idOverride || ENV_ONESIGNAL;
+  if (!id) return;
+  if (document.querySelector('script[src*="OneSignalSDK"]')) return; // already loaded
   const s = document.createElement('script');
   s.src = 'https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js';
   s.async = true;
@@ -64,7 +70,7 @@ export function initOneSignal() {
   window.OneSignalDeferred = window.OneSignalDeferred || [];
   window.OneSignalDeferred.push(async (OneSignal: { init: (cfg: unknown) => Promise<void> }) => {
     await OneSignal.init({
-      appId: ONESIGNAL_ID,
+      appId: id,
       promptOptions: {
         slidedown: {
           prompts: [{

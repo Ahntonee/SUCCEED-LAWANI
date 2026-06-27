@@ -5,6 +5,7 @@ import { Phone, Mail, MapPin, Briefcase, Send, CheckCircle, MessageSquare, User,
 import { toast } from 'sonner';
 import { api } from '../lib/api';
 import { useSEO } from '../hooks/useSEO';
+import { useSiteContent } from '../context/SiteContentContext';
 
 const contactInfo = [
   {
@@ -47,9 +48,10 @@ const inquiryTypes = [
 ];
 
 export default function Contact() {
+  const { content } = useSiteContent();
   useSEO({
-    title: 'Contact — Succeed Michael Lawani',
-    description: 'Get in touch with Succeed Michael Lawani for bookings, music collaborations, fashion inquiries, and digital marketing consultations.',
+    title: content.seo_contact_title || 'Contact',
+    description: content.seo_contact_desc || 'Get in touch with Succeed Michael Lawani for bookings, music collaborations, fashion inquiries, and digital marketing consultations.',
   });
   const [formData, setFormData] = useState({
     name: '',

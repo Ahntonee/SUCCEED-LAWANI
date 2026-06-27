@@ -2,15 +2,16 @@ import { useState, useEffect, useRef } from 'react';
 import { X, Mail, Download } from 'lucide-react';
 import { api } from '../lib/api';
 import { trackEvent } from '../lib/analytics';
+import { useSiteContent } from '../context/SiteContentContext';
 
 const KEY = 'sml_exit_popup_shown';
-
-// Lead magnet PDF — place the file at /public/lead-magnet.pdf
-// Update the filename/title below when the client provides the actual PDF.
 const LEAD_MAGNET_URL = '/lead-magnet.pdf';
-const LEAD_MAGNET_TITLE = '7 Days Daily Miracle Devotional';
 
 export default function ExitIntentPopup() {
+  const { content } = useSiteContent();
+  const title       = content.exit_popup_title       || 'Free Download';
+  const body        = content.exit_popup_body        || 'Join Succeed Daily Updates — receive daily inspiration, faith, and transformational messages directly from Succeed, plus get the free devotional PDF.';
+  const leadMagnet  = content.exit_popup_lead_magnet || '7 Days Daily Miracle Devotional';
   const [visible, setVisible] = useState(false);
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
@@ -66,8 +67,8 @@ export default function ExitIntentPopup() {
           <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-3">
             <Download size={28} className="text-white" />
           </div>
-          <h2 className="text-xl font-extrabold mb-1">Free Download</h2>
-          <p className="text-white/80 text-sm font-semibold">{LEAD_MAGNET_TITLE}</p>
+          <h2 className="text-xl font-extrabold mb-1">{title}</h2>
+          <p className="text-white/80 text-sm font-semibold">{leadMagnet}</p>
         </div>
 
         <div className="p-6">
@@ -90,9 +91,7 @@ export default function ExitIntentPopup() {
               <p className="text-[#0f172a] font-bold text-lg mb-1 text-center">
                 👉 Join Succeed Daily Updates
               </p>
-              <p className="text-[#64748b] text-sm text-center mb-5 leading-relaxed">
-                Receive daily inspiration, faith, and transformational messages directly from Succeed — plus get the free devotional PDF.
-              </p>
+              <p className="text-[#64748b] text-sm text-center mb-5 leading-relaxed">{body}</p>
               <form onSubmit={submit} className="space-y-3">
                 <input
                   type="email"

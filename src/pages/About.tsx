@@ -32,11 +32,11 @@ const values = [
 ];
 
 export default function About() {
-  useSEO({
-    title: 'About — Succeed Michael Lawani',
-    description: 'Learn about Succeed Michael Lawani — his journey in gospel music, Succeeder Designs fashion brand, and digital marketing expertise.',
-  });
   const { content } = useSiteContent();
+  useSEO({
+    title: content.seo_about_title || 'About',
+    description: content.seo_about_desc || 'Learn about Succeed Michael Lawani — his journey in gospel music, Succeeder Designs fashion brand, and digital marketing expertise.',
+  });
   useEffect(() => { window.scrollTo(0, 0); }, []);
 
   // Portrait: about_portrait takes priority, fallback to hero_image, fallback to placeholder

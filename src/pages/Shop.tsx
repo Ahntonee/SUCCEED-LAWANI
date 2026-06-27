@@ -7,6 +7,7 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { api } from '../lib/api';
 import { useSEO } from '../hooks/useSEO';
+import { useSiteContent } from '../context/SiteContentContext';
 
 interface Product {
   id: number;
@@ -129,9 +130,10 @@ function ProductCard({ product }: { product: Product }) {
 }
 
 export default function Shop() {
+  const { content } = useSiteContent();
   useSEO({
-    title: 'Shop — Succeeder Designs & Merch',
-    description: 'Shop exclusive fashion pieces, music merch, and digital products from Succeed Michael Lawani\'s Succeeder Designs brand.',
+    title: content.seo_shop_title || 'Shop — Succeeder Designs & Merch',
+    description: content.seo_shop_desc || 'Shop exclusive fashion pieces, music merch, and digital products from Succeed Michael Lawani\'s Succeeder Designs brand.',
   });
   const [products, setProducts] = useState<Product[]>([]);
   const [filtered, setFiltered] = useState<Product[]>([]);

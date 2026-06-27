@@ -5,6 +5,7 @@ import { Calendar, Clock, MapPin, Ticket, Users, ArrowRight } from 'lucide-react
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { api } from '../lib/api';
 import { useSEO } from '../hooks/useSEO';
+import { useSiteContent } from '../context/SiteContentContext';
 
 interface Event {
   id: number;
@@ -23,9 +24,10 @@ interface Event {
 }
 
 export default function Events() {
+  const { content } = useSiteContent();
   useSEO({
-    title: 'Events — Succeed Michael Lawani',
-    description: 'Upcoming concerts, fashion shows, speaking engagements, and events featuring Succeed Michael Lawani.',
+    title: content.seo_events_title || 'Events',
+    description: content.seo_events_desc || 'Upcoming concerts, fashion shows, speaking engagements, and events featuring Succeed Michael Lawani.',
   });
   const [allEvents, setAllEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
