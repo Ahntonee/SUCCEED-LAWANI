@@ -8,6 +8,8 @@ import { toast } from 'sonner';
 import { api } from '../lib/api';
 import { useSiteContent } from '../context/SiteContentContext';
 import { useAudioPlayer, formatTime, downloadTrack } from '../hooks/useAudioPlayer';
+import { useSEO } from '../hooks/useSEO';
+import EmailCaptureCTA from '../components/EmailCaptureCTA';
 
 const services = [
   { icon: Music,      title: 'Music',            desc: 'Creating inspirational and soulful music that resonates with hearts across the globe. From Daily Miracles to Philistine.', link: '/music' },
@@ -21,6 +23,10 @@ interface HomeEvent { day: string; month: string; title: string; description: st
 interface HomeBlogPost { id: number; image: string; category: string; title: string; excerpt: string; }
 
 export default function Home() {
+  useSEO({
+    title: 'Succeed Michael Lawani — Music, Fashion & Digital Marketing',
+    description: 'Official website of Succeed Michael Lawani — gospel artist, fashion designer, and digital marketing expert based in Lagos, Nigeria.',
+  });
   const { content } = useSiteContent();
   const [musicTracks, setMusicTracks] = useState<HomeTrack[]>([]);
   const [events, setEvents] = useState<HomeEvent[]>([]);
@@ -502,6 +508,9 @@ export default function Home() {
           </div>
         </div>
       )}
+
+      {/* Email capture CTA */}
+      <EmailCaptureCTA />
 
       <Footer />
       {donateOpen && <DonateModal onClose={() => setDonateOpen(false)} />}

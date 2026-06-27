@@ -4,6 +4,9 @@ import About from './pages/About'
 import Events from './pages/Events'
 import Blog from './pages/Blog'
 import BlogPost from './pages/BlogPost'
+import PrivacyPolicy from './pages/PrivacyPolicy'
+import CookieBanner from './components/CookieBanner'
+import ExitIntentPopup from './components/ExitIntentPopup'
 import Music from './pages/Music'
 import Contact from './pages/Contact'
 import Shop from './pages/Shop'
@@ -33,6 +36,8 @@ export default function App() {
     <SiteContentProvider>
       <CartProvider>
         <FloatingDonate />
+        <CookieBanner />
+        <ExitIntentPopup />
         <Routes>
           {/* Public site */}
           <Route path="/" element={<Home />} />
@@ -40,6 +45,7 @@ export default function App() {
           <Route path="/events" element={<Events />} />
           <Route path="/blog" element={<Blog />} />
           <Route path="/blog/:id" element={<BlogPost />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/music" element={<Music />} />
           <Route path="/contact" element={<Contact />} />
 

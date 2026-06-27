@@ -4,6 +4,8 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { Calendar, Clock, ArrowRight, User, Tag, Search } from 'lucide-react';
 import { api } from '../lib/api';
+import { useSEO } from '../hooks/useSEO';
+import EmailCaptureCTA from '../components/EmailCaptureCTA';
 
 interface BlogPost {
   id: number;
@@ -20,6 +22,10 @@ interface BlogPost {
 }
 
 export default function Blog() {
+  useSEO({
+    title: 'Blog — Music, Fashion & Marketing Insights',
+    description: 'Read Succeed Michael Lawani\'s blog — thoughts on music, fashion, digital marketing, faith, and the creative journey.',
+  });
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -197,6 +203,7 @@ export default function Blog() {
         </div>
       </section>
 
+      <EmailCaptureCTA />
       <Footer />
     </div>
   );

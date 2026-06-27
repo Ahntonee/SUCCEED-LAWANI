@@ -4,6 +4,7 @@ import Footer from '../components/Footer';
 import { Phone, Mail, MapPin, Briefcase, Send, CheckCircle, MessageSquare, User, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import { api } from '../lib/api';
+import { useSEO } from '../hooks/useSEO';
 
 const contactInfo = [
   {
@@ -46,6 +47,10 @@ const inquiryTypes = [
 ];
 
 export default function Contact() {
+  useSEO({
+    title: 'Contact — Succeed Michael Lawani',
+    description: 'Get in touch with Succeed Michael Lawani for bookings, music collaborations, fashion inquiries, and digital marketing consultations.',
+  });
   const [formData, setFormData] = useState({
     name: '',
     email: '',

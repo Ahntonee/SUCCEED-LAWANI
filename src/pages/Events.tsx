@@ -4,6 +4,7 @@ import Footer from '../components/Footer';
 import { Calendar, Clock, MapPin, Ticket, Users, ArrowRight } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { api } from '../lib/api';
+import { useSEO } from '../hooks/useSEO';
 
 interface Event {
   id: number;
@@ -22,6 +23,10 @@ interface Event {
 }
 
 export default function Events() {
+  useSEO({
+    title: 'Events — Succeed Michael Lawani',
+    description: 'Upcoming concerts, fashion shows, speaking engagements, and events featuring Succeed Michael Lawani.',
+  });
   const [allEvents, setAllEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'upcoming' | 'past'>('all');

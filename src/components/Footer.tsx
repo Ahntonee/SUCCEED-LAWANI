@@ -135,10 +135,13 @@ export default function Footer() {
 
         {/* Bottom */}
         <div className="border-t border-white/10 pt-6 text-center">
-          <p className="text-white/50 text-sm flex items-center justify-center gap-1">
+          <p className="text-white/50 text-sm flex items-center justify-center gap-1 flex-wrap">
             &copy; {new Date().getFullYear()} Succeed Michael Lawani. All Rights Reserved. | Designed with{' '}
             <Heart size={14} className="text-[#0d9488] fill-[#0d9488]" /> by Succeeder Designs
           </p>
+          <div className="flex justify-center gap-4 mt-2">
+            <Link to="/privacy-policy" className="text-white/30 hover:text-white/60 text-xs transition-colors">Privacy Policy</Link>
+          </div>
         </div>
       </div>
     </footer>

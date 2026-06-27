@@ -5,6 +5,7 @@ import { Play, Pause, SkipForward, SkipBack, Download, Music2, Disc3, Star, Head
 import { api } from '../lib/api';
 import { useSiteContent } from '../context/SiteContentContext';
 import { useAudioPlayer, formatTime, downloadTrack } from '../hooks/useAudioPlayer';
+import { useSEO } from '../hooks/useSEO';
 
 interface Track {
   id: number;
@@ -27,6 +28,10 @@ interface Album {
 }
 
 export default function Music() {
+  useSEO({
+    title: 'Music — Succeed Michael Lawani',
+    description: 'Stream and download gospel music by Succeed Michael Lawani. Explore albums, singles, and live performances.',
+  });
   const { content } = useSiteContent();
   const [tracks, setTracks] = useState<Track[]>([]);
   const [albums, setAlbums] = useState<Album[]>([]);

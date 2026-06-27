@@ -3,6 +3,7 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { Music, Palette, TrendingUp, Award, Users, Globe, Headphones, Sparkles, ImageIcon } from 'lucide-react';
 import { useSiteContent } from '../context/SiteContentContext';
+import { useSEO } from '../hooks/useSEO';
 
 const milestones = [
   { year: '2018', title: 'Started Music Career', desc: 'Released debut single "Rise Up" which gained 100K+ streams in the first month.' },
@@ -31,6 +32,10 @@ const values = [
 ];
 
 export default function About() {
+  useSEO({
+    title: 'About — Succeed Michael Lawani',
+    description: 'Learn about Succeed Michael Lawani — his journey in gospel music, Succeeder Designs fashion brand, and digital marketing expertise.',
+  });
   const { content } = useSiteContent();
   useEffect(() => { window.scrollTo(0, 0); }, []);
 

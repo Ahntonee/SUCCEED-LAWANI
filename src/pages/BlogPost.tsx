@@ -2,8 +2,10 @@ import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
-import { Calendar, Clock, User, Tag, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Calendar, Clock, User, Tag, ArrowLeft, ArrowRight, Share2 } from 'lucide-react';
 import { api } from '../lib/api';
+import { useSEO } from '../hooks/useSEO';
+import { trackEvent } from '../lib/analytics';
 
 interface BlogPost {
   id: number;
@@ -26,6 +28,14 @@ export default function BlogPost() {
   const [related, setRelated] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+
+  useSEO({
+    title: post?.title,
+    description: post?.excerpt,
+    image: post?.image,
+    type: 'article',
+    article: { publishedTime: post?.date, author: post?.author, tags: post?.tags },
+  });
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -185,11 +195,43 @@ export default function BlogPost() {
         </section>
       )}
 
-      {/* Back link */}
-      <div className="max-w-[860px] mx-auto px-6 py-8">
+      {/* Share + back */}
+      <div className="max-w-[860px] mx-auto px-6 py-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <Link to="/blog" className="inline-flex items-center gap-2 text-[#0d9488] font-semibold hover:gap-3 transition-all">
           <ArrowLeft size={16} /> All Posts
         </Link>
+        {post && (
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-[#64748b] flex items-center gap-1.5"><Share2 size={14} /> Share:</span>
+            {[
+              {
+                label: 'WhatsApp',
+                color: 'bg-[#25D366]',
+                href: `https://wa.me/?text=${encodeURIComponent(`${post.title} — ${window.location.href}`)}`,
+              },
+              {
+                label: 'Facebook',
+                color: 'bg-[#1877F2]',
+                href: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`,
+              },
+              {
+                label: 'X',
+                color: 'bg-[#000]',
+                href: `https://twitter.com/intent/tweet?text=${encodeURIComponent(post.title)}&url=${encodeURIComponent(window.location.href)}`,
+              },
+            ].map((s) => (
+              <a
+                key={s.label}
+                href={s.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => trackEvent('blog_share', { platform: s.label, post_id: post.id })}
+                className={`${s.color} text-white text-xs font-semibold px-3 py-1.5 rounded-full hover:opacity-90 transition-opacity`}>
+                {s.label}
+              </a>
+            ))}
+          </div>
+        )}
       </div>
 
       <Footer />
