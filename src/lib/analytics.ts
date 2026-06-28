@@ -7,7 +7,7 @@ declare global {
   interface Window {
     dataLayer: unknown[];
     gtag: (...args: unknown[]) => void;
-    fbq: ((...args: unknown[]) => void) & { queue: unknown[]; callMethod?: (...args: unknown[]) => void };
+    fbq?: ((...args: unknown[]) => void) & { queue: unknown[]; callMethod?: (...args: unknown[]) => void };
     OneSignalDeferred: unknown[];
   }
 }
@@ -41,9 +41,10 @@ export function initMetaPixel(idOverride?: string) {
   const id = idOverride || ENV_PIXEL;
   if (!id) return;
   if (window.fbq) return; // already loaded
-  const fbq = function (...args: unknown[]) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const fbq: any = function (...args: unknown[]) {
     if (fbq.callMethod) fbq.callMethod(...args); else fbq.queue.push(args);
-  } as typeof window.fbq;
+  };
   fbq.queue = [];
   window.fbq = fbq;
   const s = document.createElement('script');
