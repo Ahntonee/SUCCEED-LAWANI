@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
-import { Play, Pause, SkipForward, SkipBack, Download, Music2, Disc3, Star, Headphones, ImageIcon } from 'lucide-react';
+import { Play, Pause, SkipForward, SkipBack, Download, Music2, Disc3, Star, Headphones, ImageIcon, Youtube } from 'lucide-react';
 import { api } from '../lib/api';
 import { useSiteContent } from '../context/SiteContentContext';
 import { useAudioPlayer, formatTime, downloadTrack } from '../hooks/useAudioPlayer';
@@ -25,6 +25,15 @@ interface Album {
   cover: string;
   trackCount: number;
   description: string;
+}
+
+function getYouTubeEmbedUrl(url: string): string | null {
+  if (!url) return null;
+  const shorts = url.match(/youtube\.com\/shorts\/([a-zA-Z0-9_-]{1,12})/);
+  if (shorts) return `https://www.youtube.com/embed/${shorts[1]}`;
+  const standard = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{1,12})/);
+  if (standard) return `https://www.youtube.com/embed/${standard[1]}`;
+  return null;
 }
 
 export default function Music() {
@@ -117,6 +126,13 @@ export default function Music() {
   const handleDownload = (track: Track) => downloadTrack(track.audioUrl, track.title);
 
   const currentTrackData = tracks.find((t) => t.id === currentTrack);
+
+  const videos = (Array.from({ length: 6 }, (_, i) => {
+    const url = content[`video_${i + 1}_url`] || '';
+    const title = content[`video_${i + 1}_title`] || '';
+    const embedUrl = getYouTubeEmbedUrl(url);
+    return embedUrl ? { embedUrl, title } : null;
+  }).filter(Boolean)) as { embedUrl: string; title: string }[];
 
   // Dynamic album art from admin content
   const albumCover1 = content.hero_album_cover_1 || '';
@@ -312,6 +328,42 @@ export default function Music() {
           </div>
         </div>
       </section>
+
+      {/* ── Music Videos ────────────────────────────────────────────────────── */}
+      {videos.length > 0 && (
+        <section className="py-16 bg-[#f8fafc]">
+          <div className="max-w-[1400px] mx-auto px-6">
+            <div className="text-center mb-12">
+              <div className="inline-flex items-center gap-2 bg-[#0d9488]/10 text-[#0d9488] px-4 py-2 rounded-full text-sm font-semibold mb-4">
+                <Youtube size={16} /> Music Videos
+              </div>
+              <h2 className="text-3xl md:text-4xl font-bold text-[#0f172a] mb-4">Watch & <span className="text-[#0d9488]">Listen</span></h2>
+              <p className="text-[#64748b]">Music videos, live performances, and more — right here on the site.</p>
+            </div>
+            <div className={`grid gap-6 ${videos.length === 1 ? 'max-w-2xl mx-auto' : videos.length === 2 ? 'sm:grid-cols-2 max-w-3xl mx-auto' : 'sm:grid-cols-2 lg:grid-cols-3'}`}>
+              {videos.map((video, i) => (
+                <div key={i} className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
+                  <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
+                    <iframe
+                      src={video.embedUrl}
+                      title={video.title || `Video ${i + 1}`}
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                      allowFullScreen
+                      loading="lazy"
+                      className="absolute inset-0 w-full h-full"
+                    />
+                  </div>
+                  {video.title && (
+                    <div className="px-4 py-3">
+                      <p className="font-semibold text-[#0f172a] text-sm leading-snug">{video.title}</p>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* ── Streaming Platforms ─────────────────────────────────────────────── */}
       <section className="py-16 bg-gradient-to-br from-[#0f172a] to-[#1e293b] text-white">

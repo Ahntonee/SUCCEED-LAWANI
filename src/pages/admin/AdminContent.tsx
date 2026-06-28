@@ -120,6 +120,23 @@ const sections: ContentSection[] = [
     ],
   },
   {
+    title: 'Music Videos (YouTube)',
+    keys: [
+      { key: 'video_1_url',   label: 'Video 1 — YouTube URL',   placeholder: 'https://youtube.com/watch?v=... or https://youtube.com/shorts/...' },
+      { key: 'video_1_title', label: 'Video 1 — Title',          placeholder: 'e.g. Daily Miracles — Official Video' },
+      { key: 'video_2_url',   label: 'Video 2 — YouTube URL',   placeholder: 'https://youtube.com/...' },
+      { key: 'video_2_title', label: 'Video 2 — Title',          placeholder: '' },
+      { key: 'video_3_url',   label: 'Video 3 — YouTube URL',   placeholder: 'https://youtube.com/...' },
+      { key: 'video_3_title', label: 'Video 3 — Title',          placeholder: '' },
+      { key: 'video_4_url',   label: 'Video 4 — YouTube URL',   placeholder: 'https://youtube.com/...' },
+      { key: 'video_4_title', label: 'Video 4 — Title',          placeholder: '' },
+      { key: 'video_5_url',   label: 'Video 5 — YouTube URL',   placeholder: 'https://youtube.com/...' },
+      { key: 'video_5_title', label: 'Video 5 — Title',          placeholder: '' },
+      { key: 'video_6_url',   label: 'Video 6 — YouTube URL',   placeholder: 'https://youtube.com/...' },
+      { key: 'video_6_title', label: 'Video 6 — Title',          placeholder: '' },
+    ],
+  },
+  {
     title: 'SEO — Page Titles & Descriptions',
     keys: [
       { key: 'seo_home_title',    label: 'Home — Title',       placeholder: 'Music, Fashion & Digital Marketing', note: 'Shown as: [your text] | Succeed Michael Lawani. Leave blank for site default.' },
