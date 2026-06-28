@@ -110,6 +110,7 @@ export default function Events() {
                     src={event.image}
                     alt={event.title}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    loading="lazy" decoding="async"
                   />
                   <div className="absolute top-4 left-4">
                     <span className={`text-xs font-bold px-3 py-1 rounded-full ${
@@ -194,6 +195,7 @@ export default function Events() {
                 src={selectedEvent.image}
                 alt={selectedEvent.title}
                 className="w-full h-48 object-cover rounded-xl mb-4"
+                loading="lazy" decoding="async"
               />
               <div className="flex items-center gap-3 mb-4">
                 <div className="bg-[#0d9488] text-white rounded-xl px-4 py-2 text-center">

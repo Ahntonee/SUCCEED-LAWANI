@@ -81,7 +81,7 @@ export default function ProductDetail() {
           {/* Images */}
           <div className="space-y-3">
             <div className="relative rounded-3xl overflow-hidden bg-white border border-gray-100 aspect-square">
-              <img src={images[mainImg]} alt={product.name} className="w-full h-full object-cover" />
+              <img src={images[mainImg]} alt={product.name} className="w-full h-full object-cover" loading="lazy" decoding="async" />
               {images.length > 1 && (
                 <>
                   <button onClick={() => setMainImg((i) => (i - 1 + images.length) % images.length)}
@@ -102,7 +102,7 @@ export default function ProductDetail() {
                 {images.map((img, i) => (
                   <button key={i} onClick={() => setMainImg(i)}
                     className={`w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 border-2 transition-all ${i === mainImg ? 'border-[#0d9488] shadow-md' : 'border-gray-100 hover:border-[#0d9488]/40'}`}>
-                    <img src={img} alt="" className="w-full h-full object-cover" />
+                    <img src={img} alt="" className="w-full h-full object-cover" loading="lazy" decoding="async" />
                   </button>
                 ))}
               </div>

@@ -168,7 +168,7 @@ export default function Home() {
           </div>
           <div className="flex justify-center relative">
             {heroImage ? (
-              <img src={heroImage} alt="Succeed Michael Lawani" className="w-full max-w-md rounded-3xl shadow-2xl object-cover" />
+              <img src={heroImage} alt="Succeed Michael Lawani" className="w-full max-w-md rounded-3xl shadow-2xl object-cover" fetchPriority="high" decoding="async" />
             ) : (
               <div className="w-full max-w-md rounded-3xl shadow-2xl bg-gradient-to-br from-[#0d9488] to-[#0f172a] flex items-center justify-center" style={{ minHeight: 400 }}>
                 <div className="text-center text-white/60 p-8">
@@ -183,7 +183,7 @@ export default function Home() {
               <p className="text-xs text-[#64748b]">Daily Miracles out now!</p>
               <div className="flex -space-x-2 mt-2">
                 {musicTracks.map((t, i) => (
-                  <img key={i} src={t.cover} alt="" className="w-8 h-8 rounded-full border-2 border-white object-cover" />
+                  <img key={i} src={t.cover} alt="" className="w-8 h-8 rounded-full border-2 border-white object-cover" loading="lazy" decoding="async" />
                 ))}
               </div>
             </div>
@@ -236,7 +236,7 @@ export default function Home() {
             {musicTracks.map((track, index) => (
               <div key={track.id} className="bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2 group">
                 <div className="relative overflow-hidden h-72">
-                  <img src={track.cover} alt={track.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  <img src={track.cover} alt={track.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" decoding="async" />
                   <div className="absolute inset-0 bg-[#0d9488]/70 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
                       onClick={() => { setCurrentTrack(index); setIsPlaying(currentTrack === index ? !isPlaying : true); }}
@@ -303,7 +303,7 @@ export default function Home() {
             </div>
             <div className="relative">
               {fashionImage ? (
-                <img src={fashionImage} alt="Fashion Show" className="rounded-3xl shadow-2xl w-full object-cover" />
+                <img src={fashionImage} alt="Fashion Show" className="rounded-3xl shadow-2xl w-full object-cover" loading="lazy" decoding="async" />
               ) : (
                 <div className="rounded-3xl shadow-2xl w-full bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center" style={{ minHeight: 320 }}>
                   <div className="text-center text-gray-400 p-8">
@@ -323,7 +323,7 @@ export default function Home() {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="order-2 lg:order-1 relative">
               {marketingImage ? (
-                <img src={marketingImage} alt="Digital Marketing" className="rounded-3xl shadow-2xl w-full" />
+                <img src={marketingImage} alt="Digital Marketing" className="rounded-3xl shadow-2xl w-full" loading="lazy" decoding="async" />
               ) : (
                 <div className="rounded-3xl shadow-2xl w-full bg-white/5 border border-white/10 flex items-center justify-center" style={{ minHeight: 320 }}>
                   <div className="text-center text-white/40 p-8">
@@ -411,7 +411,7 @@ export default function Home() {
             {blogPosts.map((post) => (
               <Link key={post.id} to={`/blog/${post.id}`} className="bg-[#f8fafc] rounded-3xl overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-2 group block">
                 <div className="h-56 overflow-hidden">
-                  <img src={post.image} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  <img src={post.image} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" decoding="async" />
                 </div>
                 <div className="p-6">
                   <span className="inline-block bg-[#0d9488] text-white text-xs font-bold px-3 py-1 rounded-full mb-3">{post.category}</span>

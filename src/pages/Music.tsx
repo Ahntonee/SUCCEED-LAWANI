@@ -172,7 +172,7 @@ export default function Music() {
               <div className="relative">
                 {albumCover1 ? (
                   <img src={albumCover1} alt="Latest Album"
-                    className="w-72 h-72 rounded-3xl shadow-2xl object-cover animate-spin"
+                    className="w-72 h-72 rounded-3xl shadow-2xl object-cover animate-spin" fetchPriority="high" decoding="async"
                     style={{ animationDuration: '20s', animationTimingFunction: 'linear', animationIterationCount: 'infinite' }} />
                 ) : (
                   <div className="w-72 h-72 rounded-3xl shadow-2xl bg-gradient-to-br from-[#0d9488] to-[#0f172a] flex items-center justify-center">
@@ -187,7 +187,7 @@ export default function Music() {
                 </div>
                 {albumCover2 ? (
                   <img src={albumCover2} alt="Featured Single"
-                    className="absolute -bottom-6 -right-6 w-32 h-32 rounded-2xl shadow-xl object-cover border-4 border-white" />
+                    className="absolute -bottom-6 -right-6 w-32 h-32 rounded-2xl shadow-xl object-cover border-4 border-white" loading="lazy" decoding="async" />
                 ) : (
                   <div className="absolute -bottom-6 -right-6 w-32 h-32 rounded-2xl shadow-xl border-4 border-white bg-gradient-to-br from-teal-400 to-cyan-600 flex items-center justify-center">
                     <Music2 size={24} className="text-white opacity-60" />
@@ -211,7 +211,7 @@ export default function Music() {
               <div key={track.id} className="bg-[#f8fafc] rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 group">
                 <div className="flex">
                   <div className="relative w-40 h-40 flex-shrink-0">
-                    <img src={track.cover} alt={track.title} className="w-full h-full object-cover" />
+                    <img src={track.cover} alt={track.title} className="w-full h-full object-cover" loading="lazy" decoding="async" />
                     <button onClick={() => handlePlay(track.id)}
                       className="absolute inset-0 bg-[#0d9488]/70 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                       {currentTrack === track.id && isPlaying ? <Pause className="text-white" size={32} /> : <Play className="text-white ml-1" size={32} />}
@@ -265,7 +265,7 @@ export default function Music() {
                     </>
                   )}
                 </div>
-                <img src={track.cover} alt={track.title} className="w-12 h-12 rounded-lg object-cover" />
+                <img src={track.cover} alt={track.title} className="w-12 h-12 rounded-lg object-cover" loading="lazy" decoding="async" />
                 <div className="flex-1 min-w-0">
                   <h4 className={`font-semibold truncate ${currentTrack === track.id ? 'text-[#0d9488]' : 'text-[#0f172a]'}`}>{track.title}</h4>
                   <p className="text-[#64748b] text-sm">{track.album}</p>
@@ -294,7 +294,7 @@ export default function Music() {
             {albums.map((album) => (
               <div key={album.id} className="bg-[#f8fafc] rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2 group">
                 <div className="relative overflow-hidden">
-                  <img src={album.cover} alt={album.title} className="w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-500" />
+                  <img src={album.cover} alt={album.title} className="w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" decoding="async" />
                   <div className="absolute top-3 right-3 bg-white/90 backdrop-blur text-[#0d9488] text-xs font-bold px-2.5 py-1 rounded-full">{album.type}</div>
                 </div>
                 <div className="p-5">

@@ -77,7 +77,7 @@ export default function About() {
             <div className="flex justify-center">
               {portrait ? (
                 <img src={portrait} alt="Succeed Michael Lawani"
-                  className="w-full max-w-md rounded-3xl shadow-2xl object-cover" />
+                  className="w-full max-w-md rounded-3xl shadow-2xl object-cover" loading="lazy" decoding="async" />
               ) : (
                 <div className="w-full max-w-md rounded-3xl shadow-2xl bg-gradient-to-br from-[#0d9488] to-[#0f172a] flex items-center justify-center" style={{ minHeight: 400 }}>
                   <div className="text-center text-white/50 p-8">

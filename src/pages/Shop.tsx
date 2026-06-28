@@ -60,7 +60,7 @@ function ProductCard({ product }: { product: Product }) {
       {/* Image Carousel */}
       <div className="relative h-56 bg-gray-50 overflow-hidden">
         <img src={images[imgIdx]} alt={product.name}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" decoding="async" />
 
         {/* Navigation arrows */}
         {images.length > 1 && (

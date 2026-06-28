@@ -36,7 +36,7 @@ export default function CartDrawer() {
           ) : (
             items.map((item) => (
               <div key={item.id} className="flex gap-4 p-3 rounded-2xl border border-gray-100 hover:border-[#0d9488]/20 transition-colors">
-                <img src={item.image} alt={item.name} className="w-20 h-20 rounded-xl object-cover bg-gray-100 flex-shrink-0" />
+                <img src={item.image} alt={item.name} className="w-20 h-20 rounded-xl object-cover bg-gray-100 flex-shrink-0" loading="lazy" decoding="async" />
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-[#0f172a] text-sm truncate">{item.name}</p>
                   <p className="text-[#0d9488] font-bold text-sm mt-0.5">₦{(item.price * item.qty).toLocaleString()}</p>
