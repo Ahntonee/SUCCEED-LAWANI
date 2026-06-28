@@ -51,8 +51,8 @@ export function initMetaPixel(idOverride?: string) {
   s.async = true;
   s.src = 'https://connect.facebook.net/en_US/fbevents.js';
   document.head.appendChild(s);
-  window.fbq('init', id);
-  window.fbq('track', 'PageView');
+  window.fbq!('init', id);
+  window.fbq!('track', 'PageView');
 }
 
 export function trackPixelEvent(event: string, params?: Record<string, unknown>) {
