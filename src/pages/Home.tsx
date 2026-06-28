@@ -409,7 +409,7 @@ export default function Home() {
           </div>
           <div className="grid md:grid-cols-3 gap-8">
             {blogPosts.map((post) => (
-              <Link key={post.id} to="/blog" className="bg-[#f8fafc] rounded-3xl overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-2 group block">
+              <Link key={post.id} to={`/blog/${post.id}`} className="bg-[#f8fafc] rounded-3xl overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-2 group block">
                 <div className="h-56 overflow-hidden">
                   <img src={post.image} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                 </div>

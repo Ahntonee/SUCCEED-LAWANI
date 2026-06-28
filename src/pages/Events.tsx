@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { Calendar, Clock, MapPin, Ticket, Users, ArrowRight } from 'lucide-react';
@@ -171,12 +172,12 @@ export default function Events() {
             I am available for performances, speaking engagements, fashion shows, and digital marketing consultations. Let us make your next event unforgettable.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a
-              href="/contact"
+            <Link
+              to="/contact"
               className="inline-flex items-center justify-center gap-2 bg-[#0d9488] text-white px-8 py-3 rounded-full font-semibold hover:bg-[#0f766e] transition-colors"
             >
               Book Now <Ticket size={18} />
-            </a>
+            </Link>
           </div>
         </div>
       </section>
@@ -224,12 +225,12 @@ export default function Events() {
                 </div>
               </div>
               {selectedEvent.status === 'upcoming' && (
-                <a
-                  href="/contact"
+                <Link
+                  to="/contact"
                   className="block w-full text-center bg-[#0d9488] text-white py-3 rounded-xl font-semibold hover:bg-[#0f766e] transition-colors"
                 >
                   RSVP / Get Tickets
-                </a>
+                </Link>
               )}
             </div>
           )}
