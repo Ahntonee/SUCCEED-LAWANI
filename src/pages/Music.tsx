@@ -188,7 +188,7 @@ export default function Music() {
               <div className="relative">
                 {albumCover1 ? (
                   <img src={albumCover1} alt="Latest Album"
-                    className="w-72 h-72 rounded-3xl shadow-2xl object-cover animate-spin" fetchPriority="high" decoding="async"
+                    className="w-72 h-72 rounded-full shadow-2xl object-cover animate-spin" fetchPriority="high" decoding="async"
                     style={{ animationDuration: '20s', animationTimingFunction: 'linear', animationIterationCount: 'infinite' }} />
                 ) : (
                   <div className="w-72 h-72 rounded-3xl shadow-2xl bg-gradient-to-br from-[#0d9488] to-[#0f172a] flex items-center justify-center">
