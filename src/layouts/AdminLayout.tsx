@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate, Outlet } from 'react-router';
 import {
   LayoutDashboard, Music, Calendar, FileText, Mail, Settings,
-  LogOut, Menu, X, Shirt, Users, Globe, ChevronRight, ExternalLink, ShoppingBag,
+  LogOut, Menu, X, Images, Users, Globe, ChevronRight, ExternalLink, ShoppingBag,
 } from 'lucide-react';
 import { api } from '../lib/api';
 import { useSiteContent } from '../context/SiteContentContext';
@@ -13,7 +13,7 @@ const navItems = [
   { path: '/admin/events',       label: 'Events',       icon: Calendar },
   { path: '/admin/blog',         label: 'Blog',         icon: FileText },
   { path: '/admin/contacts',     label: 'Contacts',     icon: Mail },
-  { path: '/admin/fashion',      label: 'Fashion',      icon: Shirt },
+  { path: '/admin/gallery',      label: 'Gallery',      icon: Images },
   { path: '/admin/subscribers',  label: 'Subscribers',  icon: Users },
   { path: '/admin/content',      label: 'Site Content', icon: Globe },
   { path: '/admin/shop',         label: 'Shop',         icon: ShoppingBag },

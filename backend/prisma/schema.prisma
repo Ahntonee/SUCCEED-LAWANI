@@ -178,6 +178,18 @@ model Order {
   @@index([createdAt])
 }
 
+model GalleryItem {
+  id        Int      @id @default(autoincrement())
+  type      String   @default("image") // "image" | "video"
+  url       String   @db.Text
+  caption   String   @default("")
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([order])
+}
+
 model Donation {
   id         Int       @id @default(autoincrement())
   reference  String    @unique

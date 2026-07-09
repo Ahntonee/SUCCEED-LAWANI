@@ -8,7 +8,7 @@ interface Event { id: number; title: string; date: string; day: string; month: s
 interface Rsvp { id: number; name: string; email: string; phone: string; ticketCount: number; paymentStatus: string; createdAt: string; }
 
 const empty: Omit<Event, 'id'> = { title: '', date: '', day: '', month: '', time: '', location: '', image: '', category: 'Music', description: '', price: '', spots: '', status: 'upcoming' };
-const categories = ['Music', 'Fashion', 'Education', 'Lifestyle', 'Other'];
+const categories = ['Music', 'Education', 'Lifestyle', 'Other'];
 
 export default function AdminEvents() {
   const dialog = useDialog();

@@ -142,10 +142,11 @@ export const api = {
   },
   updateOrder: (id: number, data: object) => request(`/shop/orders/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
 
-  // Fashion inquiries
-  getFashionInquiries: (status?: string) => request(`/fashion${status ? `?status=${status}` : ''}`),
-  updateFashionInquiry: (id: number, data: object) => request(`/fashion/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
-  deleteFashionInquiry: (id: number) => request(`/fashion/${id}`, { method: 'DELETE' }),
+  // Gallery
+  getGallery: () => request('/gallery'),
+  createGalleryItem: (data: object) => request('/gallery', { method: 'POST', body: JSON.stringify(data) }),
+  updateGalleryItem: (id: number, data: object) => request(`/gallery/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  deleteGalleryItem: (id: number) => request(`/gallery/${id}`, { method: 'DELETE' }),
 
   // Donations — public
   initDonation: (data: { amount: number; currency?: string; name?: string; email: string; message?: string }) =>

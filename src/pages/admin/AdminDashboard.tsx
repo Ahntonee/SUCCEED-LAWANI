@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
-import { Mail, Calendar, FileText, Music, Users, Shirt, ArrowRight, Clock, ShoppingBag, Package } from 'lucide-react';
+import { Mail, Calendar, FileText, Music, Users, Images, ArrowRight, Clock, ShoppingBag, Package } from 'lucide-react';
 import { api } from '../../lib/api';
 
 interface Stats {
@@ -10,7 +10,7 @@ interface Stats {
   blogPosts: number;
   tracks: number;
   subscribers: number;
-  fashionInquiries: number;
+  galleryItems: number;
   products: number;
   orders: number;
   pendingOrders: number;
@@ -28,10 +28,10 @@ export default function AdminDashboard() {
       api.getBlogPosts(),
       api.getTracks(),
       api.getSubscribers(),
-      api.getFashionInquiries(),
+      api.getGallery(),
       api.getAllProducts(),
       api.getOrders({ limit: 1 }),
-    ]).then(([contacts, events, posts, tracks, subs, fashion, products, ordersRes]) => {
+    ]).then(([contacts, events, posts, tracks, subs, gallery, products, ordersRes]) => {
       const ordersList: Record<string, string>[] = Array.isArray(ordersRes) ? ordersRes : (ordersRes.orders ?? []);
       const totalOrders: number = ordersRes?.total ?? ordersList.length;
       const pendingOrders: number = Array.isArray(ordersRes)
@@ -45,7 +45,7 @@ export default function AdminDashboard() {
         blogPosts: posts.length,
         tracks: tracks.length,
         subscribers: subs.length,
-        fashionInquiries: fashion.filter((f: Record<string, string>) => f.status === 'new').length,
+        galleryItems: Array.isArray(gallery) ? gallery.length : 0,
         products: Array.isArray(products) ? products.filter((p: Record<string, string>) => p.status === 'active').length : 0,
         orders: totalOrders,
         pendingOrders,
@@ -61,14 +61,13 @@ export default function AdminDashboard() {
     { label: 'Blog Posts',        value: stats?.blogPosts        ?? '—', icon: FileText,    color: 'bg-[#0d9488]',  link: '/admin/blog'       },
     { label: 'Music Tracks',      value: stats?.tracks           ?? '—', icon: Music,       color: 'bg-[#0f172a]',  link: '/admin/music'      },
     { label: 'Subscribers',       value: stats?.subscribers      ?? '—', icon: Users,       color: 'bg-[#0d9488]',  link: '/admin/subscribers'},
-    { label: 'Fashion Inquiries', value: stats?.fashionInquiries ?? '—', icon: Shirt,       color: 'bg-[#0f172a]',  link: '/admin/fashion'    },
+    { label: 'Gallery Items',     value: stats?.galleryItems     ?? '—', icon: Images,      color: 'bg-[#0f172a]',  link: '/admin/gallery'    },
     { label: 'Active Products',   value: stats?.products         ?? '—', icon: ShoppingBag, color: 'bg-[#0d9488]',  link: '/admin/shop'       },
     { label: 'Total Orders',      value: stats?.orders           ?? '—', icon: Package,     color: 'bg-[#0f172a]',  link: '/admin/shop'       },
   ];
 
   const inquiryColors: Record<string, string> = {
     music:     'bg-[#0d9488]/10 text-[#0d9488]',
-    fashion:   'bg-purple-100 text-purple-700',
     marketing: 'bg-blue-100 text-blue-700',
     events:    'bg-orange-100 text-orange-700',
     media:     'bg-pink-100 text-pink-700',

@@ -7,7 +7,6 @@ interface Contact { id: number; name: string; email: string; subject: string; in
 
 const typeColors: Record<string, string> = {
   music: 'bg-[#0d9488]/10 text-[#0d9488]',
-  fashion: 'bg-purple-100 text-purple-700',
   marketing: 'bg-blue-100 text-blue-700',
   events: 'bg-orange-100 text-orange-700',
   media: 'bg-pink-100 text-pink-700',
@@ -47,7 +46,7 @@ export default function AdminContacts() {
     load();
   };
 
-  const tabs = ['all', 'music', 'fashion', 'marketing', 'events', 'media', 'other'];
+  const tabs = ['all', 'music', 'marketing', 'events', 'media', 'other'];
   const statuses = ['unread', 'read', 'replied', 'archived'];
 
   return (

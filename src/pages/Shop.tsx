@@ -133,7 +133,7 @@ export default function Shop() {
   const { content } = useSiteContent();
   useSEO({
     title: content.seo_shop_title || 'Shop — Succeeder Designs & Merch',
-    description: content.seo_shop_desc || 'Shop exclusive fashion pieces, music merch, and digital products from Succeed Michael Lawani\'s Succeeder Designs brand.',
+    description: content.seo_shop_desc || 'Shop exclusive music merch and digital products from Succeed Michael Lawani\'s Succeeder Designs brand.',
   });
   const [products, setProducts] = useState<Product[]>([]);
   const [filtered, setFiltered] = useState<Product[]>([]);

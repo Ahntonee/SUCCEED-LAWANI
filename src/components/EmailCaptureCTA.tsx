@@ -7,7 +7,7 @@ import { useSiteContent } from '../context/SiteContentContext';
 export default function EmailCaptureCTA() {
   const { content } = useSiteContent();
   const heading  = content.email_cta_title    || "Join Succeed's Daily Updates";
-  const subtitle = content.email_cta_subtitle || 'Get exclusive music releases, fashion drops, and marketing insights delivered to your inbox.';
+  const subtitle = content.email_cta_subtitle || 'Get exclusive music releases, gallery updates, and marketing insights delivered to your inbox.';
   const [email, setEmail]     = useState('');
   const [loading, setLoading] = useState(false);
   const [done, setDone]       = useState(false);

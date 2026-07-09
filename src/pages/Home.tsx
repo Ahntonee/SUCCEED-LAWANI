@@ -3,7 +3,7 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import DonateModal from '../components/DonateModal';
 import { Link } from 'react-router';
-import { Play, Pause, SkipForward, SkipBack, Music, Palette, TrendingUp, Calendar, ArrowRight, Heart, Phone, Send, Mail, MapPin, Briefcase, Download } from 'lucide-react';
+import { Play, Pause, SkipForward, SkipBack, Music, Images, TrendingUp, Calendar, ArrowRight, Heart, Phone, Send, Mail, MapPin, Briefcase, Download, Youtube } from 'lucide-react';
 import { toast } from 'sonner';
 import { api } from '../lib/api';
 import { useSiteContent } from '../context/SiteContentContext';
@@ -12,25 +12,27 @@ import { useSEO } from '../hooks/useSEO';
 import EmailCaptureCTA from '../components/EmailCaptureCTA';
 
 const services = [
-  { icon: Music,      title: 'Music',            desc: 'Creating inspirational and soulful music that resonates with hearts across the globe. From Daily Miracles to Philistine.', link: '/music' },
-  { icon: Palette,    title: 'Fashion Design',    desc: 'Succeeder Designs — crafting exquisite male & female suits, traditional Agbada, and contemporary African styles.',     link: '/about' },
-  { icon: TrendingUp, title: 'Digital Marketing', desc: 'Expert in Facebook Ads, DMI, optimization, and growth strategies for brands looking to scale their digital presence.',        link: '/blog' },
-  { icon: Calendar,   title: 'Events & Booking',  desc: 'Available for performances, speaking engagements, fashion shows, and digital marketing consultations worldwide.',            link: '/events' },
+  { icon: Music,      title: 'Music',             desc: 'Creating inspirational and soulful music that resonates with hearts across the globe. From Daily Miracles to Philistine.', link: '/music' },
+  { icon: Images,     title: 'Gallery',            desc: 'A curated visual gallery of photos and videos capturing creative moments, events, and milestones.',                          link: '/gallery' },
+  { icon: TrendingUp, title: 'Digital Marketing',  desc: 'Expert in Facebook Ads, DMI, optimization, and growth strategies for brands looking to scale their digital presence.',       link: '/blog' },
+  { icon: Calendar,   title: 'Events & Booking',   desc: 'Available for performances, speaking engagements, and digital marketing consultations worldwide.',                           link: '/events' },
 ];
 
 interface HomeTrack { id: number; title: string; cover: string; audioUrl: string; }
 interface HomeEvent { day: string; month: string; title: string; description: string; location: string; time: string; }
 interface HomeBlogPost { id: number; image: string; category: string; title: string; excerpt: string; }
+interface HomeGalleryItem { id: number; type: string; url: string; caption: string; }
 
 export default function Home() {
   const { content } = useSiteContent();
   useSEO({
     title: content.seo_home_title || undefined,
-    description: content.seo_home_desc || 'Official website of Succeed Michael Lawani — gospel artist, fashion designer, and digital marketing expert based in Lagos, Nigeria.',
+    description: content.seo_home_desc || 'Official website of Succeed Michael Lawani — gospel artist, visual creator, and digital marketing expert based in Lagos, Nigeria.',
   });
   const [musicTracks, setMusicTracks] = useState<HomeTrack[]>([]);
   const [events, setEvents] = useState<HomeEvent[]>([]);
   const [blogPosts, setBlogPosts] = useState<HomeBlogPost[]>([]);
+  const [galleryItems, setGalleryItems] = useState<HomeGalleryItem[]>([]);
   const [currentTrack, setCurrentTrack] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [contactSending, setContactSending] = useState(false);
@@ -58,6 +60,7 @@ export default function Home() {
     api.getTracks().then((data: HomeTrack[]) => setMusicTracks(data.slice(0, 3))).catch(console.error);
     api.getEvents('upcoming').then((data: HomeEvent[]) => setEvents(data.slice(0, 4))).catch(console.error);
     api.getPublicPosts().then((data: HomeBlogPost[]) => setBlogPosts(data.slice(0, 3))).catch(console.error);
+    api.getGallery().then((data: HomeGalleryItem[]) => setGalleryItems(data.slice(0, 6))).catch(console.error);
   }, []);
 
   // Update src when track changes
@@ -114,8 +117,7 @@ export default function Home() {
   };
 
   // ── Dynamic content helpers ─────────────────────────────────────────────────
-  const heroImage    = content.hero_image       || '';
-  const fashionImage = content.fashion_image    || '';
+  const heroImage    = content.hero_image        || '';
   const marketingImage = content.marketing_image || '';
   const donateUrl    = content.donate_url        || '';
   const donateText   = content.donate_text       || 'Support My Music';
@@ -135,7 +137,7 @@ export default function Home() {
               <span className="text-[#0d9488]">Every Time</span>
             </h1>
             <p className="text-[#64748b] text-lg leading-relaxed mb-8 max-w-lg">
-              {content.hero_subtext || 'Succeed Michael Lawani is a multi-talented creative force — a passionate musician, innovative fashion designer behind Succeeder Designs, and a results-driven digital marketing expert.'}
+              {content.hero_subtext || 'Succeed Michael Lawani is a multi-talented creative force — a passionate musician, visual artist, and a results-driven digital marketing expert.'}
             </p>
             <div className="flex flex-wrap gap-4 mb-10">
               <Link to="/music" className="inline-flex items-center gap-2 bg-[#0d9488] text-white px-6 py-3.5 rounded-full font-semibold hover:bg-[#0f766e] hover:-translate-y-0.5 transition-all shadow-[0_4px_20px_rgba(13,148,136,0.3)]">
@@ -207,7 +209,7 @@ export default function Home() {
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Easily Explore My World</h2>
             <p className="text-white/80 max-w-xl mx-auto">
-              From soul-stirring music to bespoke fashion and cutting-edge digital marketing — discover the many dimensions of Succeed Michael Lawani.
+              From soul-stirring music to visual storytelling and cutting-edge digital marketing — discover the many dimensions of Succeed Michael Lawani.
             </p>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -281,38 +283,56 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── Fashion ────────────────────────────────────────────────────────── */}
+      {/* ── Gallery ────────────────────────────────────────────────────────── */}
       <section className="py-20 bg-white">
         <div className="max-w-[1400px] mx-auto px-6">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div>
-              <h2 className="text-3xl md:text-4xl font-bold text-[#0f172a] mb-4">
-                Succeeder <span className="text-[#0d9488]">Designs</span>
-              </h2>
-              <p className="text-[#64748b] leading-relaxed mb-6">
-                Premium fashion for the modern individual. From bespoke male and female suits to traditional Agbada and contemporary African styles — every piece is crafted with precision, passion, and an unwavering commitment to excellence.
-              </p>
-              <div className="flex flex-wrap gap-3 mb-8">
-                {['Custom Fitting', 'Premium Fabrics', 'Worldwide Shipping', 'Express Delivery'].map((tag) => (
-                  <span key={tag} className="bg-[#f8fafc] text-[#0d9488] px-4 py-2 rounded-full text-sm font-medium border border-gray-100">{tag}</span>
-                ))}
-              </div>
-              <Link to="/about" className="inline-flex items-center gap-2 bg-[#0d9488] text-white px-6 py-3 rounded-full font-semibold hover:bg-[#0f766e] transition-colors">
-                Explore Fashion <ArrowRight size={18} />
-              </Link>
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-[#0f172a] mb-4">
+              Photo &amp; Video <span className="text-[#0d9488]">Gallery</span>
+            </h2>
+            <p className="text-[#64748b]">A curated collection of moments, performances, and creative works.</p>
+          </div>
+          {galleryItems.length > 0 ? (
+            <div className="columns-2 md:columns-3 gap-4 space-y-4">
+              {galleryItems.map((item) => {
+                const thumb = item.type === 'video'
+                  ? (() => {
+                      const shorts = item.url.match(/youtube\.com\/shorts\/([a-zA-Z0-9_-]{1,12})/);
+                      if (shorts) return `https://img.youtube.com/vi/${shorts[1]}/mqdefault.jpg`;
+                      const std = item.url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{1,12})/);
+                      return std ? `https://img.youtube.com/vi/${std[1]}/mqdefault.jpg` : null;
+                    })()
+                  : item.url;
+                return (
+                  <Link key={item.id} to="/gallery" className="block break-inside-avoid rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 group relative">
+                    {thumb ? (
+                      <img src={thumb} alt={item.caption || ''} className="w-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" decoding="async" />
+                    ) : (
+                      <div className="w-full h-40 bg-gradient-to-br from-[#0d9488]/10 to-[#0d9488]/5 flex items-center justify-center">
+                        <Images size={32} className="text-[#0d9488]/40" />
+                      </div>
+                    )}
+                    {item.type === 'video' && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-colors">
+                        <div className="w-10 h-10 bg-white/90 rounded-full flex items-center justify-center">
+                          <Youtube size={18} className="text-red-500" />
+                        </div>
+                      </div>
+                    )}
+                  </Link>
+                );
+              })}
             </div>
-            <div className="relative">
-              {fashionImage ? (
-                <img src={fashionImage} alt="Fashion Show" className="rounded-3xl shadow-2xl w-full object-cover" loading="lazy" decoding="async" />
-              ) : (
-                <div className="rounded-3xl shadow-2xl w-full bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center" style={{ minHeight: 320 }}>
-                  <div className="text-center text-gray-400 p-8">
-                    <Palette size={40} className="mx-auto mb-2 opacity-40" />
-                    <p className="text-sm">Upload fashion photo in<br /><strong>Admin → Site Content → Media &amp; Images</strong></p>
-                  </div>
-                </div>
-              )}
+          ) : (
+            <div className="rounded-3xl bg-[#f8fafc] border-2 border-dashed border-gray-200 flex flex-col items-center justify-center py-20 text-center">
+              <Images size={48} className="text-[#0d9488]/30 mb-4" />
+              <p className="text-[#64748b] text-sm">No gallery items yet — add photos and videos in <strong>Admin → Gallery</strong>.</p>
             </div>
+          )}
+          <div className="text-center mt-10">
+            <Link to="/gallery" className="inline-flex items-center gap-2 text-[#0d9488] font-semibold hover:gap-3 transition-all">
+              View Full Gallery <ArrowRight size={18} />
+            </Link>
           </div>
         </div>
       </section>
@@ -370,7 +390,7 @@ export default function Home() {
             <h2 className="text-3xl md:text-4xl font-bold text-[#0f172a] mb-4">
               Upcoming <span className="text-[#0d9488]">Events</span>
             </h2>
-            <p className="text-[#64748b]">Join me at these exclusive events. Performances, fashion shows, and masterclasses.</p>
+            <p className="text-[#64748b]">Join me at these exclusive events. Performances, masterclasses, and speaking engagements.</p>
           </div>
           <div className="grid md:grid-cols-2 gap-6">
             {events.map((event) => (
@@ -405,7 +425,7 @@ export default function Home() {
             <h2 className="text-3xl md:text-4xl font-bold text-[#0f172a] mb-4">
               Latest <span className="text-[#0d9488]">Blog</span>
             </h2>
-            <p className="text-[#64748b]">Insights on music, fashion, digital marketing, and personal growth.</p>
+            <p className="text-[#64748b]">Insights on music, digital marketing, faith, and personal growth.</p>
           </div>
           <div className="grid md:grid-cols-3 gap-8">
             {blogPosts.map((post) => (
@@ -434,7 +454,7 @@ export default function Home() {
             <div>
               <h2 className="text-3xl md:text-4xl font-bold text-[#0f172a] mb-4">Get In <span className="text-[#0d9488]">Touch</span></h2>
               <p className="text-[#64748b] leading-relaxed mb-8">
-                Ready to collaborate? Whether it is music production, bespoke fashion, or digital marketing strategy — let us create something extraordinary together.
+                Ready to collaborate? Whether it is music production, digital marketing strategy, or anything creative — let us create something extraordinary together.
               </p>
               <div className="space-y-4 mb-8">
                 {[
@@ -467,7 +487,7 @@ export default function Home() {
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-[#0f172a] mb-2">Subject</label>
-                  <input name="subject" type="text" required placeholder="Music / Fashion / Marketing / Other" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#0d9488] focus:outline-none focus:ring-4 focus:ring-[#0d9488]/10 transition-all" />
+                  <input name="subject" type="text" required placeholder="Music / Gallery / Marketing / Other" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#0d9488] focus:outline-none focus:ring-4 focus:ring-[#0d9488]/10 transition-all" />
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-[#0f172a] mb-2">Message</label>

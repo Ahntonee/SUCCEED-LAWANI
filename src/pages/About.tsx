@@ -1,27 +1,26 @@
 import { useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
-import { Music, Palette, TrendingUp, Award, Users, Globe, Headphones, Sparkles, ImageIcon } from 'lucide-react';
+import { Music, Images, TrendingUp, Award, Users, Globe, Headphones, Sparkles, ImageIcon } from 'lucide-react';
 import { useSiteContent } from '../context/SiteContentContext';
 import { useSEO } from '../hooks/useSEO';
 
 const milestones = [
   { year: '2018', title: 'Started Music Career', desc: 'Released debut single "Rise Up" which gained 100K+ streams in the first month.' },
-  { year: '2019', title: 'Founded Succeeder Designs', desc: 'Launched bespoke fashion brand specializing in premium African and contemporary wear.' },
   { year: '2020', title: 'Digital Marketing Certification', desc: 'Earned DMI Pro certification and began managing campaigns for major Nigerian brands.' },
   { year: '2021', title: 'First Major Concert', desc: 'Sold-out debut concert in Lagos with 5,000+ attendees.' },
-  { year: '2023', title: 'Fashion Week Showcase', desc: 'Featured collection at Lagos Fashion Week, gaining international recognition.' },
+  { year: '2022', title: 'Visual Gallery Launch', desc: 'Launched a curated photo and video gallery capturing creative milestones and events.' },
   { year: '2024', title: '1M+ Streams Milestone', desc: 'Crossed 1 million combined streams across all platforms.' },
   { year: '2025', title: 'Brand Partnerships', desc: 'Signed strategic partnerships with 3 major international brands.' },
   { year: '2026', title: 'Daily Miracles Album', desc: 'Released highly anticipated album "Daily Miracles" to critical acclaim.' },
 ];
 
-const SKILL_ICONS = [Music, Palette, TrendingUp, Headphones];
+const SKILL_ICONS = [Music, Images, TrendingUp, Headphones];
 const SKILL_DEFAULTS = [
-  { name: 'Music Production', level: '95%', desc: 'Vocal performance, songwriting, audio production' },
-  { name: 'Fashion Design',   level: '98%', desc: 'Bespoke tailoring, collection design, styling' },
-  { name: 'Digital Marketing',level: '96%', desc: 'Facebook Ads, SEO, brand strategy, analytics' },
-  { name: 'Sound Engineering',level: '90%', desc: 'Mixing, mastering, studio production' },
+  { name: 'Music Production',          level: '95%', desc: 'Vocal performance, songwriting, audio production' },
+  { name: 'Visual Arts & Photography', level: '90%', desc: 'Photography, visual storytelling, creative direction' },
+  { name: 'Digital Marketing',         level: '96%', desc: 'Facebook Ads, SEO, brand strategy, analytics' },
+  { name: 'Sound Engineering',         level: '90%', desc: 'Mixing, mastering, studio production' },
 ];
 
 const values = [
@@ -35,7 +34,7 @@ export default function About() {
   const { content } = useSiteContent();
   useSEO({
     title: content.seo_about_title || 'About',
-    description: content.seo_about_desc || 'Learn about Succeed Michael Lawani — his journey in gospel music, Succeeder Designs fashion brand, and digital marketing expertise.',
+    description: content.seo_about_desc || 'Learn about Succeed Michael Lawani — his journey in gospel music, visual arts, and digital marketing expertise.',
   });
   useEffect(() => { window.scrollTo(0, 0); }, []);
 
@@ -43,14 +42,14 @@ export default function About() {
   const portrait = content.about_portrait || content.hero_image || '';
 
   const bio1 = content.about_bio_1 ||
-    'A multi-talented creative force born in Lagos, Nigeria, Succeed Michael Lawani has dedicated his life to mastering the arts of music, fashion, and digital marketing. His journey from a young dreamer to an internationally recognized creative entrepreneur is nothing short of inspirational.';
+    'A multi-talented creative force born in Lagos, Nigeria, Succeed Michael Lawani has dedicated his life to mastering the arts of music, visual storytelling, and digital marketing. His journey from a young dreamer to an internationally recognized creative entrepreneur is nothing short of inspirational.';
   const bio2 = content.about_bio_2 ||
-    'With over 8 years of professional experience across multiple industries, Succeed has built a reputation for excellence, innovation, and an unwavering commitment to his craft. Whether he is in the studio creating soul-stirring music, designing bespoke fashion pieces, or crafting digital marketing strategies that drive results — he brings the same passion and precision to everything he touches.';
+    'With over 8 years of professional experience across multiple industries, Succeed has built a reputation for excellence, innovation, and an unwavering commitment to his craft. Whether he is in the studio creating soul-stirring music, capturing moments through visual arts, or crafting digital marketing strategies that drive results — he brings the same passion and precision to everything he touches.';
 
   const story1 = content.about_story_1 ||
     'Growing up in the vibrant city of Lagos, I was surrounded by creativity, resilience, and an unstoppable energy that shaped my worldview. From singing in church choirs to sketching designs in my school notebooks, I always knew that creating was not just something I did — it was who I was.';
   const story2 = content.about_story_2 ||
-    'Every song I write carries a message of hope and faith. Every fashion piece I design celebrates the beauty of African heritage blended with modern sophistication. Every marketing strategy I craft is built to help brands tell their story authentically and effectively.';
+    'Every song I write carries a message of hope and faith. Every image and video I create celebrates the beauty of African heritage and modern creativity. Every marketing strategy I craft is built to help brands tell their story authentically and effectively.';
   const story3 = content.about_story_3 ||
     'My mission is simple: to use every gift I have been blessed with to inspire, uplift, and make a lasting impact on the world. I believe that when we operate in our purpose, success is not just achieved — it becomes inevitable.';
 

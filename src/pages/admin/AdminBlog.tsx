@@ -7,7 +7,7 @@ import { useDialog } from '../../context/DialogContext';
 interface Post { id: number; title: string; excerpt: string; content: string; image: string; images: string[]; category: string; date: string; readTime: string; tags: string[]; featured: boolean; status: string; viewCount: number; }
 
 const empty: Omit<Post, 'id' | 'viewCount'> = { title: '', excerpt: '', content: '', image: '', images: [], category: 'Music', date: '', readTime: '', tags: [], featured: false, status: 'published' };
-const categories = ['Music', 'Fashion', 'Marketing', 'Lifestyle'];
+const categories = ['Music', 'Marketing', 'Lifestyle'];
 
 export default function AdminBlog() {
   const dialog = useDialog();
@@ -71,7 +71,6 @@ export default function AdminBlog() {
 
   const catColors: Record<string, string> = {
     Music: 'bg-[#0d9488]/10 text-[#0d9488]',
-    Fashion: 'bg-purple-100 text-purple-700',
     Marketing: 'bg-blue-100 text-blue-700',
     Lifestyle: 'bg-orange-100 text-orange-700',
   };

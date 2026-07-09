@@ -104,18 +104,4 @@ export interface Subscriber {
   createdAt: string;
 }
 
-export interface FashionInquiry {
-  id: number;
-  name: string;
-  email: string;
-  phone: string;
-  garmentType: string;
-  measurements: string;
-  budget: string;
-  notes: string;
-  status: 'new' | 'in-progress' | 'completed';
-  createdAt: string;
-  updatedAt: string;
-}
-
 export type SiteContent = Record<string, string>;

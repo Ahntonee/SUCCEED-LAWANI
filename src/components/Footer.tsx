@@ -15,7 +15,7 @@ const quickLinks = [
 
 const services = [
   'Music Production',
-  'Bespoke Tailoring',
+  'Visual Gallery',
   'Facebook Ads',
   'DMI Training',
   'Brand Optimization',
@@ -59,7 +59,7 @@ export default function Footer() {
               </div>
             </div>
             <p className="text-white/60 text-sm leading-relaxed mb-5">
-              Multi-talented creative professional bringing together music, fashion, and digital marketing excellence. Inspiring the world one creation at a time.
+              Multi-talented creative professional bringing together music, visual arts, and digital marketing excellence. Inspiring the world one creation at a time.
             </p>
 
             {/* Social icons — only shown when URLs are set */}

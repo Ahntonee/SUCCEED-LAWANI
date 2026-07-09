@@ -34,13 +34,12 @@ const contactInfo = [
     title: 'Business',
     value: 'Succeeder Designs & Digital Agency',
     link: '#',
-    description: 'Fashion, Music & Marketing',
+    description: 'Music, Gallery & Marketing',
   },
 ];
 
 const inquiryTypes = [
   { value: 'music', label: 'Music Collaboration / Booking' },
-  { value: 'fashion', label: 'Fashion Design / Tailoring' },
   { value: 'marketing', label: 'Digital Marketing Services' },
   { value: 'events', label: 'Event Speaking / Appearance' },
   { value: 'media', label: 'Media / Press Inquiry' },
@@ -51,7 +50,7 @@ export default function Contact() {
   const { content } = useSiteContent();
   useSEO({
     title: content.seo_contact_title || 'Contact',
-    description: content.seo_contact_desc || 'Get in touch with Succeed Michael Lawani for bookings, music collaborations, fashion inquiries, and digital marketing consultations.',
+    description: content.seo_contact_desc || 'Get in touch with Succeed Michael Lawani for bookings, music collaborations, and digital marketing consultations.',
   });
   const [formData, setFormData] = useState({
     name: '',
@@ -105,7 +104,7 @@ export default function Contact() {
               Let Us <span className="text-[#0d9488]">Connect</span>
             </h1>
             <p className="text-[#64748b] text-lg">
-              Ready to collaborate? Whether it is music production, bespoke fashion, digital marketing strategy, or just to say hello — I would love to hear from you.
+              Ready to collaborate? Whether it is music production, digital marketing strategy, or just to say hello — I would love to hear from you.
             </p>
           </div>
         </div>
@@ -270,7 +269,7 @@ export default function Contact() {
                 <h3 className="text-xl font-bold text-[#0f172a] mb-6">Frequently Asked Questions</h3>
                 <div className="space-y-4">
                   {[
-                    { q: 'How far in advance should I book?', a: 'For events and performances, at least 4-6 weeks in advance. For fashion orders, 2-3 weeks is ideal.' },
+                    { q: 'How far in advance should I book?', a: 'For events and performances, at least 4-6 weeks in advance is ideal.' },
                     { q: 'Do you offer international shipping?', a: 'Yes! Succeeder Designs ships worldwide via DHL and FedEx with tracking.' },
                     { q: 'Can I get a custom song written?', a: 'Absolutely. I create custom songs for weddings, anniversaries, corporate events, and special occasions.' },
                     { q: 'What marketing services do you offer?', a: 'Facebook/Instagram Ads, Google Ads, SEO, content strategy, brand consulting, and training workshops.' },

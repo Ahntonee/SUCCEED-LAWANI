@@ -10,7 +10,7 @@ interface SEOProps {
 }
 
 const SITE = 'Succeed Michael Lawani';
-const DEFAULT_DESC = 'Gospel musician, fashion designer, and digital marketing strategist from Lagos, Nigeria. Creator of soul-stirring music and the Succeeder Designs brand.';
+const DEFAULT_DESC = 'Gospel musician, visual artist, and digital marketing strategist from Lagos, Nigeria. Creator of soul-stirring music and the Succeeder Designs brand.';
 const DEFAULT_IMAGE = 'https://www.succeedlawani.com/og-image.jpg';
 
 function setMeta(attr: 'name' | 'property', key: string, value: string) {
@@ -25,7 +25,7 @@ function setMeta(attr: 'name' | 'property', key: string, value: string) {
 
 export function useSEO({ title, description, image, url, type = 'website', article }: SEOProps = {}) {
   useEffect(() => {
-    const fullTitle = title ? `${title} | ${SITE}` : `${SITE} — Music, Fashion & Digital Marketing`;
+    const fullTitle = title ? `${title} | ${SITE}` : `${SITE} — Music, Gallery & Digital Marketing`;
     const desc = description || DEFAULT_DESC;
     const img = image || DEFAULT_IMAGE;
     const pageUrl = url || window.location.href;

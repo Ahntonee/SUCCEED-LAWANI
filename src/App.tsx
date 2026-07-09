@@ -21,7 +21,8 @@ import AdminEvents from './pages/admin/AdminEvents'
 import AdminBlog from './pages/admin/AdminBlog'
 import AdminContacts from './pages/admin/AdminContacts'
 import AdminContent from './pages/admin/AdminContent'
-import AdminFashion from './pages/admin/AdminFashion'
+import AdminGallery from './pages/admin/AdminGallery'
+import Gallery from './pages/Gallery'
 import AdminSubscribers from './pages/admin/AdminSubscribers'
 import AdminSettings from './pages/admin/AdminSettings'
 import AdminShop from './pages/admin/AdminShop'
@@ -47,6 +48,7 @@ export default function App() {
           <Route path="/blog/:id" element={<BlogPost />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/music" element={<Music />} />
+          <Route path="/gallery" element={<Gallery />} />
           <Route path="/contact" element={<Contact />} />
 
           {/* Shop — checkout MUST come before /:id to avoid route shadowing */}
@@ -62,7 +64,7 @@ export default function App() {
             <Route path="events" element={<AdminEvents />} />
             <Route path="blog" element={<AdminBlog />} />
             <Route path="contacts" element={<AdminContacts />} />
-            <Route path="fashion" element={<AdminFashion />} />
+            <Route path="gallery" element={<AdminGallery />} />
             <Route path="subscribers" element={<AdminSubscribers />} />
             <Route path="content" element={<AdminContent />} />
             <Route path="settings" element={<AdminSettings />} />

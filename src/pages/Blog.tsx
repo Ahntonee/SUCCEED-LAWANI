@@ -25,8 +25,8 @@ interface BlogPost {
 export default function Blog() {
   const { content } = useSiteContent();
   useSEO({
-    title: content.seo_blog_title || 'Blog — Music, Fashion & Marketing Insights',
-    description: content.seo_blog_desc || 'Read Succeed Michael Lawani\'s blog — thoughts on music, fashion, digital marketing, faith, and the creative journey.',
+    title: content.seo_blog_title || 'Blog — Music, Marketing & Creative Insights',
+    description: content.seo_blog_desc || 'Read Succeed Michael Lawani\'s blog — thoughts on music, digital marketing, faith, and the creative journey.',
   });
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
@@ -44,7 +44,7 @@ export default function Blog() {
     api.getPublicPosts().then(setPosts).catch(console.error).finally(() => setLoading(false));
   }, []);
 
-  const categories = ['All', 'Music', 'Fashion', 'Marketing', 'Lifestyle'];
+  const categories = ['All', 'Music', 'Marketing', 'Lifestyle'];
 
   const filteredPosts = posts.filter((post) => {
     const matchesCategory = activeCategory === 'All' || post.category === activeCategory;
@@ -72,7 +72,7 @@ export default function Blog() {
               The <span className="text-[#0d9488]">Blog</span>
             </h1>
             <p className="text-[#64748b] text-lg mb-8">
-              Thoughts on music, fashion, digital marketing, and the creative journey. Raw, real, and made to inspire.
+              Thoughts on music, digital marketing, faith, and the creative journey. Raw, real, and made to inspire.
             </p>
             {/* Search */}
             <div className="relative max-w-md mx-auto">

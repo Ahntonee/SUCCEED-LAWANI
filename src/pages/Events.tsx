@@ -28,7 +28,7 @@ export default function Events() {
   const { content } = useSiteContent();
   useSEO({
     title: content.seo_events_title || 'Events',
-    description: content.seo_events_desc || 'Upcoming concerts, fashion shows, speaking engagements, and events featuring Succeed Michael Lawani.',
+    description: content.seo_events_desc || 'Upcoming concerts, speaking engagements, and events featuring Succeed Michael Lawani.',
   });
   const [allEvents, setAllEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
@@ -61,7 +61,7 @@ export default function Events() {
               Upcoming <span className="text-[#0d9488]">Events</span>
             </h1>
             <p className="text-[#64748b] text-lg">
-              Join me at exclusive concerts, fashion shows, masterclasses, and special appearances. Each event is crafted to inspire, educate, and entertain.
+              Join me at exclusive concerts, masterclasses, and special appearances. Each event is crafted to inspire, educate, and entertain.
             </p>
           </div>
         </div>
@@ -170,7 +170,7 @@ export default function Events() {
             Want Me at Your <span className="text-[#14b8a6]">Event?</span>
           </h2>
           <p className="text-white/70 mb-8">
-            I am available for performances, speaking engagements, fashion shows, and digital marketing consultations. Let us make your next event unforgettable.
+            I am available for performances, speaking engagements, and digital marketing consultations. Let us make your next event unforgettable.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
