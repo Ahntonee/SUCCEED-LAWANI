@@ -83,7 +83,8 @@ export const api = {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
       body: form,
     });
-    const data = await res.json();
+    if (res.status === 413) throw new Error('File too large — maximum upload size is 50MB.');
+    const data = await res.json().catch(() => ({ error: `Server error (${res.status})` }));
     if (!res.ok) throw new Error(data.error || 'Upload failed');
     return data.url as string;
   },
