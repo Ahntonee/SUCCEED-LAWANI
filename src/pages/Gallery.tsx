@@ -34,10 +34,13 @@ export default function Gallery() {
   const [filter, setFilter] = useState<'all' | 'image' | 'video'>('all');
   const [lightbox, setLightbox] = useState<GalleryItem | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
     window.scrollTo(0, 0);
-    api.getGallery().then((data) => { setItems(data); setLoading(false); }).catch(() => setLoading(false));
+    api.getGallery()
+      .then((data) => { setItems(data); setLoading(false); })
+      .catch(() => { setError(true); setLoading(false); });
   }, []);
 
   const filtered = filter === 'all' ? items : items.filter((i) => i.type === filter);
@@ -88,6 +91,14 @@ export default function Gallery() {
           {loading ? (
             <div className="flex items-center justify-center h-64">
               <div className="w-10 h-10 border-2 border-[#0d9488]/30 border-t-[#0d9488] rounded-full animate-spin" />
+            </div>
+          ) : error ? (
+            <div className="text-center py-20">
+              <Images size={48} className="mx-auto text-gray-200 mb-4" />
+              <p className="text-[#64748b]">Unable to load gallery. Please refresh the page.</p>
+              <button onClick={() => window.location.reload()} className="mt-4 inline-flex items-center gap-2 bg-[#0d9488] text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-[#0f766e] transition-colors">
+                Refresh
+              </button>
             </div>
           ) : filtered.length === 0 ? (
             <div className="text-center py-20">
