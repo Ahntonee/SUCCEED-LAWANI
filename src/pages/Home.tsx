@@ -3,7 +3,7 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import DonateModal from '../components/DonateModal';
 import { Link } from 'react-router';
-import { Play, Pause, SkipForward, SkipBack, Music, Images, TrendingUp, Calendar, ArrowRight, Heart, Phone, Send, Mail, MapPin, Briefcase, Download, Youtube } from 'lucide-react';
+import { Play, Pause, SkipForward, SkipBack, Music, Images, Calendar, ArrowRight, Heart, Phone, Send, Mail, MapPin, Briefcase, Download, Youtube } from 'lucide-react';
 import { toast } from 'sonner';
 import { api } from '../lib/api';
 import { useSiteContent } from '../context/SiteContentContext';
@@ -14,8 +14,7 @@ import EmailCaptureCTA from '../components/EmailCaptureCTA';
 const services = [
   { icon: Music,      title: 'Music',             desc: 'Creating inspirational and soulful music that resonates with hearts across the globe. From Daily Miracles to Philistine.', link: '/music' },
   { icon: Images,     title: 'Gallery',            desc: 'A curated visual gallery of photos and videos capturing creative moments, events, and milestones.',                          link: '/gallery' },
-  { icon: TrendingUp, title: 'Digital Marketing',  desc: 'Expert in Facebook Ads, DMI, optimization, and growth strategies for brands looking to scale their digital presence.',       link: '/blog' },
-  { icon: Calendar,   title: 'Events & Booking',   desc: 'Available for performances, speaking engagements, and digital marketing consultations worldwide.',                           link: '/events' },
+  { icon: Calendar,   title: 'Events & Booking',   desc: 'Available for performances, speaking engagements, and creative consultations worldwide.',                                    link: '/events' },
 ];
 
 interface HomeTrack { id: number; title: string; cover: string; audioUrl: string; }
@@ -117,9 +116,8 @@ export default function Home() {
   };
 
   // ── Dynamic content helpers ─────────────────────────────────────────────────
-  const heroImage    = content.hero_image        || '';
-  const marketingImage = content.marketing_image || '';
-  const donateUrl    = content.donate_url        || '';
+  const heroImage    = content.hero_image  || '';
+  const donateUrl    = content.donate_url  || '';
   const donateText   = content.donate_text       || 'Support My Music';
 
   return (
@@ -337,51 +335,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── Digital Marketing ──────────────────────────────────────────────── */}
-      <section className="py-20 bg-gradient-to-br from-[#0f172a] to-[#1e293b] text-white">
-        <div className="max-w-[1400px] mx-auto px-6">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div className="order-2 lg:order-1 relative">
-              {marketingImage ? (
-                <img src={marketingImage} alt="Digital Marketing" className="rounded-3xl shadow-2xl w-full" loading="lazy" decoding="async" />
-              ) : (
-                <div className="rounded-3xl shadow-2xl w-full bg-white/5 border border-white/10 flex items-center justify-center" style={{ minHeight: 320 }}>
-                  <div className="text-center text-white/40 p-8">
-                    <TrendingUp size={40} className="mx-auto mb-2 opacity-40" />
-                    <p className="text-sm">Upload marketing photo in<br /><strong>Admin → Site Content → Media &amp; Images</strong></p>
-                  </div>
-                </div>
-              )}
-              <div className="absolute top-4 -right-4 w-14 h-14 bg-[#0d9488] rounded-2xl flex items-center justify-center text-white text-xl animate-bounce" style={{ animationDuration: '3s' }}>+</div>
-              <div className="absolute bottom-8 -left-4 w-14 h-14 bg-[#0d9488] rounded-2xl flex items-center justify-center text-white text-xl animate-bounce" style={{ animationDuration: '4s', animationDelay: '1s' }}>+</div>
-            </div>
-            <div className="order-1 lg:order-2">
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">
-                Digital Marketing <span className="text-[#14b8a6]">Expert</span>
-              </h2>
-              <p className="text-white/70 leading-relaxed mb-8">
-                Transform your brand's digital presence with data-driven strategies. As a certified digital marketing professional, I specialize in Facebook Ads, DMI, conversion optimization, and scaling businesses to 7 figures.
-              </p>
-              <div className="grid grid-cols-2 gap-4 mb-8">
-                {[
-                  { value: content.campaigns_count    || '500+',  label: 'Campaigns Managed' },
-                  { value: content.client_satisfaction || '98%',  label: 'Client Satisfaction' },
-                  { value: content.ad_spend_managed   || '10M+',  label: 'Ad Spend Managed' },
-                  { value: content.brands_scaled      || '50+',   label: 'Brands Scaled' },
-                ].map((stat) => (
-                  <div key={stat.label} className="bg-white/5 border border-white/10 rounded-2xl p-4 text-center">
-                    <div className="text-2xl font-bold text-[#14b8a6] mb-1">{stat.value}</div>
-                    <div className="text-white/60 text-sm">{stat.label}</div>
-                  </div>
-                ))}
-              </div>
-              <Link to="/blog" className="inline-flex items-center gap-2 bg-[#0d9488] text-white px-6 py-3 rounded-full font-semibold hover:bg-[#0f766e] transition-colors">
-                Read Marketing Tips <ArrowRight size={18} />
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
 
       {/* ── Events ─────────────────────────────────────────────────────────── */}
       <section className="py-20 bg-[#f8fafc]">
