@@ -14,11 +14,8 @@ const quickLinks = [
 ];
 
 const services = [
-  'Music Production',
-  'Visual Gallery',
-  'Facebook Ads',
-  'DMI Training',
-  'Brand Optimization',
+  { label: 'Music Production', href: null },
+  { label: 'Digital Marketing', href: 'https://seedsads.com' },
 ];
 
 export default function Footer() {
@@ -106,8 +103,14 @@ export default function Footer() {
             <h4 className="text-base font-semibold mb-5 text-white">Services</h4>
             <ul className="space-y-3">
               {services.map((service) => (
-                <li key={service}>
-                  <span className="text-white/60 text-sm">{service}</span>
+                <li key={service.label}>
+                  {service.href ? (
+                    <a href={service.href} target="_blank" rel="noopener noreferrer" className="text-white/60 text-sm hover:text-[#14b8a6] transition-colors">
+                      {service.label}
+                    </a>
+                  ) : (
+                    <span className="text-white/60 text-sm">{service.label}</span>
+                  )}
                 </li>
               ))}
             </ul>
