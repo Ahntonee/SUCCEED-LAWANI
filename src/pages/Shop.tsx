@@ -20,6 +20,7 @@ interface Product {
   tags: string[];
   stock: number;
   status: string;
+  affiliateUrl?: string;
 }
 
 const TAG_FILTERS = [
@@ -39,11 +40,13 @@ function ProductCard({ product }: { product: Product }) {
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (product.affiliateUrl) { window.open(product.affiliateUrl, '_blank', 'noopener,noreferrer'); return; }
     addToCart({ id: product.id, name: product.name, price: product.price, image: images[0] });
   };
 
   const handleBuyNow = (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (product.affiliateUrl) { window.open(product.affiliateUrl, '_blank', 'noopener,noreferrer'); return; }
     addToCart({ id: product.id, name: product.name, price: product.price, image: images[0] });
     openCart();
     navigate('/shop/checkout');
@@ -91,19 +94,26 @@ function ProductCard({ product }: { product: Product }) {
           {product.tags.includes('bestSeller') && <span className="bg-yellow-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">Best Seller</span>}
         </div>
 
-        {/* Out of stock overlay */}
-        {product.stock === 0 && (
+        {/* Out of stock overlay — not shown for affiliate products */}
+        {product.stock === 0 && !product.affiliateUrl && (
           <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
             <span className="bg-white text-[#0f172a] text-xs font-bold px-3 py-1 rounded-full">Out of Stock</span>
           </div>
         )}
 
+        {/* Amazon badge */}
+        {product.affiliateUrl && (
+          <div className="absolute top-2 right-2">
+            <span className="bg-orange-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">Amazon</span>
+          </div>
+        )}
+
         {/* Buy Now overlay on hover */}
-        {product.stock > 0 && (
+        {(product.stock > 0 || product.affiliateUrl) && (
           <div className="absolute inset-x-0 bottom-0 p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
             <button onClick={handleBuyNow}
               className="w-full py-2 bg-[#0f172a] text-white rounded-xl text-xs font-bold hover:bg-[#1e293b] transition-colors">
-              Buy Now
+              {product.affiliateUrl ? 'Buy on Amazon' : 'Buy Now'}
             </button>
           </div>
         )}
@@ -119,10 +129,10 @@ function ProductCard({ product }: { product: Product }) {
             <span className="text-[#94a3b8] text-sm line-through">₦{product.comparePrice.toLocaleString()}</span>
           )}
         </div>
-        <button onClick={handleAddToCart} disabled={product.stock === 0}
+        <button onClick={handleAddToCart} disabled={product.stock === 0 && !product.affiliateUrl}
           className="w-full py-2.5 bg-[#0d9488]/10 text-[#0d9488] rounded-xl text-sm font-bold hover:bg-[#0d9488] hover:text-white transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2">
           <ShoppingCart size={14} />
-          {product.stock === 0 ? 'Out of Stock' : 'Add to Cart'}
+          {product.affiliateUrl ? 'View on Amazon' : product.stock === 0 ? 'Out of Stock' : 'Add to Cart'}
         </button>
       </div>
     </div>

@@ -6,7 +6,7 @@ import { useDialog } from '../../context/DialogContext';
 
 interface Product {
   id: number; name: string; description: string; price: number; comparePrice?: number;
-  images: string[]; category: string; tags: string[]; stock: number; status: string;
+  images: string[]; category: string; tags: string[]; stock: number; status: string; affiliateUrl?: string;
 }
 interface Order {
   id: number; customerName: string; customerEmail: string; total: number;
@@ -23,7 +23,7 @@ const ALL_TAGS = [
   { key: 'hot', label: 'Hot', icon: <Flame size={12} />, color: 'bg-orange-50 text-orange-600' },
 ];
 
-const emptyProduct = { name: '', description: '', price: 0, comparePrice: undefined as number | undefined, images: [] as string[], category: 'Apparel', tags: [] as string[], stock: 0, status: 'active' };
+const emptyProduct = { name: '', description: '', price: 0, comparePrice: undefined as number | undefined, images: [] as string[], category: 'Apparel', tags: [] as string[], stock: 0, status: 'active', affiliateUrl: '' };
 
 export default function AdminShop() {
   const dialog = useDialog();
@@ -135,7 +135,10 @@ export default function AdminShop() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-sm text-[#64748b]">{p.category}</td>
+                    <td className="px-4 py-3 text-sm text-[#64748b]">
+                      {p.category}
+                      {p.affiliateUrl && <span className="ml-2 text-xs font-bold px-2 py-0.5 rounded-full bg-orange-100 text-orange-600">Amazon</span>}
+                    </td>
                     <td className="px-4 py-3">
                       <p className="text-sm font-bold text-[#0d9488]">₦{p.price.toLocaleString()}</p>
                       {p.comparePrice && <p className="text-xs text-[#94a3b8] line-through">₦{p.comparePrice.toLocaleString()}</p>}
@@ -327,6 +330,20 @@ export default function AdminShop() {
                     );
                   })}
                 </div>
+              </div>
+
+              {/* Amazon Affiliate URL */}
+              <div>
+                <label className="block text-sm font-semibold text-[#0f172a] mb-1.5">
+                  Amazon Affiliate URL <span className="text-[#94a3b8] font-normal text-xs">optional — if set, Buy Now redirects to Amazon instead of checkout</span>
+                </label>
+                <input
+                  type="url"
+                  value={modal.data.affiliateUrl || ''}
+                  onChange={(e) => setModal({ ...modal, data: { ...modal.data, affiliateUrl: e.target.value } })}
+                  placeholder="https://www.amazon.com/dp/..."
+                  className="w-full px-4 py-2.5 rounded-xl border-2 border-gray-200 focus:border-orange-400 focus:outline-none text-sm transition-all"
+                />
               </div>
 
               {/* Image URL fallback */}

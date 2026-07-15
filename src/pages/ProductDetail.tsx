@@ -9,7 +9,7 @@ import { api } from '../lib/api';
 
 interface Product {
   id: number; name: string; description: string; price: number; comparePrice?: number;
-  images: string[]; category: string; tags: string[]; stock: number;
+  images: string[]; category: string; tags: string[]; stock: number; affiliateUrl?: string;
 }
 
 const TAG_ICONS: Record<string, React.JSX.Element> = {
@@ -131,13 +131,15 @@ export default function ProductDetail() {
               )}
             </div>
 
-            {/* Stock */}
-            <div className="flex items-center gap-2">
-              <Package size={16} className={product.stock > 0 ? 'text-green-500' : 'text-red-400'} />
-              <span className={`text-sm font-semibold ${product.stock > 0 ? 'text-green-600' : 'text-red-500'}`}>
-                {product.stock > 0 ? `${product.stock} in stock` : 'Out of stock'}
-              </span>
-            </div>
+            {/* Stock — hidden for affiliate products */}
+            {!product.affiliateUrl && (
+              <div className="flex items-center gap-2">
+                <Package size={16} className={product.stock > 0 ? 'text-green-500' : 'text-red-400'} />
+                <span className={`text-sm font-semibold ${product.stock > 0 ? 'text-green-600' : 'text-red-500'}`}>
+                  {product.stock > 0 ? `${product.stock} in stock` : 'Out of stock'}
+                </span>
+              </div>
+            )}
 
             {/* Description */}
             <div className="bg-white rounded-2xl p-5 border border-gray-100">
@@ -145,8 +147,20 @@ export default function ProductDetail() {
               <p className="text-[#64748b] text-sm leading-relaxed whitespace-pre-line">{product.description}</p>
             </div>
 
-            {/* Qty + Buttons */}
-            {product.stock > 0 && (
+            {/* Amazon affiliate CTA */}
+            {product.affiliateUrl ? (
+              <div className="space-y-3">
+                <a
+                  href={product.affiliateUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full py-4 bg-orange-500 hover:bg-orange-600 text-white rounded-2xl font-bold transition-colors text-base flex items-center justify-center gap-2"
+                >
+                  Buy on Amazon →
+                </a>
+                <p className="text-xs text-[#94a3b8] text-center">Price may vary on Amazon. You'll be taken to Amazon to complete your purchase.</p>
+              </div>
+            ) : product.stock > 0 ? (
               <div className="space-y-3">
                 <div className="flex items-center gap-3">
                   <span className="text-sm font-semibold text-[#0f172a]">Qty:</span>
@@ -165,7 +179,7 @@ export default function ProductDetail() {
                   Buy Now
                 </button>
               </div>
-            )}
+            ) : null}
           </div>
         </div>
       </div>
