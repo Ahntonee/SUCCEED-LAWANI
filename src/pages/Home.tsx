@@ -254,20 +254,29 @@ export default function Home() {
                 <div className="p-6">
                   <h3 className="text-xl font-bold text-[#0f172a] mb-2">{track.title}</h3>
                   <div className="flex gap-3">
-                    <button
-                      onClick={() => { setCurrentTrack(index); setIsPlaying(currentTrack === index ? !isPlaying : true); }}
-                      disabled={!track.audioUrl}
-                      className="flex-1 bg-[#0d9488] text-white py-2.5 rounded-xl font-semibold text-sm hover:bg-[#0f766e] transition-colors flex items-center justify-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {currentTrack === index && isPlaying ? <><Pause size={14} /> Pause</> : <><Play size={14} /> Listen</>}
-                    </button>
-                    <button
-                      onClick={() => handleDownload(track)}
-                      disabled={!track.audioUrl}
-                      className="flex-1 bg-[#f8fafc] text-[#0f172a] py-2.5 rounded-xl font-semibold text-sm border-2 border-gray-200 hover:border-[#0d9488] hover:text-[#0d9488] transition-colors flex items-center justify-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed"
-                    >
-                      <Download size={14} /> Download
-                    </button>
+                    {track.audioUrl && track.audioUrl.includes('spotify.com/track/') ? (
+                      <a href={track.audioUrl} target="_blank" rel="noopener noreferrer"
+                        className="flex-1 bg-[#1DB954] text-white py-2.5 rounded-xl font-semibold text-sm hover:bg-[#1aa34a] transition-colors flex items-center justify-center gap-1">
+                        <Play size={14} /> Listen on Spotify
+                      </a>
+                    ) : (
+                      <button
+                        onClick={() => { setCurrentTrack(index); setIsPlaying(currentTrack === index ? !isPlaying : true); }}
+                        disabled={!track.audioUrl}
+                        className="flex-1 bg-[#0d9488] text-white py-2.5 rounded-xl font-semibold text-sm hover:bg-[#0f766e] transition-colors flex items-center justify-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {currentTrack === index && isPlaying ? <><Pause size={14} /> Pause</> : <><Play size={14} /> Listen</>}
+                      </button>
+                    )}
+                    {!track.audioUrl?.includes('spotify.com/track/') && (
+                      <button
+                        onClick={() => handleDownload(track)}
+                        disabled={!track.audioUrl}
+                        className="flex-1 bg-[#f8fafc] text-[#0f172a] py-2.5 rounded-xl font-semibold text-sm border-2 border-gray-200 hover:border-[#0d9488] hover:text-[#0d9488] transition-colors flex items-center justify-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed"
+                      >
+                        <Download size={14} /> Download
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
-import { Play, Pause, SkipForward, SkipBack, Download, Music2, Disc3, Star, Headphones, ImageIcon, Youtube } from 'lucide-react';
+import { Play, Pause, SkipForward, SkipBack, Download, Music2, Disc3, Star, Headphones, ImageIcon, Youtube, X, ExternalLink } from 'lucide-react';
 import { api } from '../lib/api';
 import { useSiteContent } from '../context/SiteContentContext';
 import { useAudioPlayer, formatTime, downloadTrack } from '../hooks/useAudioPlayer';
@@ -27,6 +27,16 @@ interface Album {
   description: string;
 }
 
+function isSpotifyUrl(url: string): boolean {
+  return !!url && url.includes('spotify.com/track/');
+}
+
+function getSpotifyEmbedUrl(url: string): string | null {
+  const match = url.match(/spotify\.com\/track\/([a-zA-Z0-9]+)/);
+  if (!match) return null;
+  return `https://open.spotify.com/embed/track/${match[1]}?utm_source=generator&theme=0`;
+}
+
 function getYouTubeEmbedUrl(url: string): string | null {
   if (!url) return null;
   const shorts = url.match(/youtube\.com\/shorts\/([a-zA-Z0-9_-]{1,12})/);
@@ -47,6 +57,7 @@ export default function Music() {
   const [streamingLinks, setStreamingLinks] = useState<{ id: number; platform: string; url: string }[]>([]);
   const [currentTrack, setCurrentTrack] = useState<number | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [spotifyModal, setSpotifyModal] = useState<{ url: string; title: string } | null>(null);
 
   const tracksRef = useRef<Track[]>([]);
   useEffect(() => { tracksRef.current = tracks; }, [tracks]);
@@ -100,11 +111,15 @@ export default function Music() {
     else audio.pause();
   }, [isPlaying]);
 
-  const handlePlay = (trackId: number) => {
-    if (currentTrack === trackId) {
+  const handlePlay = (track: Track) => {
+    if (isSpotifyUrl(track.audioUrl)) {
+      setSpotifyModal({ url: track.audioUrl, title: track.title });
+      return;
+    }
+    if (currentTrack === track.id) {
       setIsPlaying(!isPlaying);
     } else {
-      setCurrentTrack(trackId);
+      setCurrentTrack(track.id);
       setIsPlaying(true);
     }
   };
@@ -228,9 +243,9 @@ export default function Music() {
                 <div className="flex">
                   <div className="relative w-40 h-40 flex-shrink-0">
                     <img src={track.cover} alt={track.title} className="w-full h-full object-cover" loading="lazy" decoding="async" />
-                    <button onClick={() => handlePlay(track.id)}
+                    <button onClick={() => handlePlay(track)}
                       className="absolute inset-0 bg-[#0d9488]/70 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                      {currentTrack === track.id && isPlaying ? <Pause className="text-white" size={32} /> : <Play className="text-white ml-1" size={32} />}
+                      {isSpotifyUrl(track.audioUrl) ? <Play className="text-white ml-1" size={32} /> : currentTrack === track.id && isPlaying ? <Pause className="text-white" size={32} /> : <Play className="text-white ml-1" size={32} />}
                     </button>
                   </div>
                   <div className="p-5 flex flex-col justify-center flex-1">
@@ -238,14 +253,21 @@ export default function Music() {
                     <h3 className="text-xl font-bold text-[#0f172a] mb-1">{track.title}</h3>
                     <p className="text-[#64748b] text-sm mb-3">{track.album} &bull; {track.duration}</p>
                     <div className="flex gap-2">
-                      <button onClick={() => handlePlay(track.id)} disabled={!track.audioUrl}
+                      <button onClick={() => handlePlay(track)} disabled={!track.audioUrl}
                         className="bg-[#0d9488] text-white px-4 py-1.5 rounded-full text-sm font-semibold hover:bg-[#0f766e] transition-colors flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed">
-                        {currentTrack === track.id && isPlaying ? <><Pause size={14} /> Pause</> : <><Play size={14} /> Play</>}
+                        {isSpotifyUrl(track.audioUrl) ? <><Play size={14} /> Listen</> : currentTrack === track.id && isPlaying ? <><Pause size={14} /> Pause</> : <><Play size={14} /> Play</>}
                       </button>
-                      <button onClick={() => handleDownload(track)} disabled={!track.audioUrl}
-                        className="bg-white border-2 border-gray-200 text-[#0f172a] px-4 py-1.5 rounded-full text-sm font-semibold hover:border-[#0d9488] hover:text-[#0d9488] transition-colors flex items-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed">
-                        <Download size={14} /> Download
-                      </button>
+                      {isSpotifyUrl(track.audioUrl) ? (
+                        <a href={track.audioUrl} target="_blank" rel="noopener noreferrer"
+                          className="bg-white border-2 border-gray-200 text-[#0f172a] px-4 py-1.5 rounded-full text-sm font-semibold hover:border-[#0d9488] hover:text-[#0d9488] transition-colors flex items-center gap-1">
+                          <ExternalLink size={14} /> Spotify
+                        </a>
+                      ) : (
+                        <button onClick={() => handleDownload(track)} disabled={!track.audioUrl}
+                          className="bg-white border-2 border-gray-200 text-[#0f172a] px-4 py-1.5 rounded-full text-sm font-semibold hover:border-[#0d9488] hover:text-[#0d9488] transition-colors flex items-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed">
+                          <Download size={14} /> Download
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -266,7 +288,7 @@ export default function Music() {
             {tracks.map((track, index) => (
               <div key={track.id}
                 className={`flex items-center gap-4 p-4 transition-colors group ${index !== tracks.length - 1 ? 'border-b border-gray-100' : ''} ${currentTrack === track.id ? 'bg-[#f0fdfa]' : 'hover:bg-[#f8fafc]'} ${track.audioUrl ? 'cursor-pointer' : 'cursor-default'}`}
-                onClick={() => track.audioUrl && handlePlay(track.id)}>
+                onClick={() => track.audioUrl && handlePlay(track)}>
                 <div className="text-[#64748b] text-sm font-semibold w-6 text-center">
                   {currentTrack === track.id && isPlaying ? (
                     <div className="flex gap-0.5 justify-center items-end h-4">
@@ -288,11 +310,19 @@ export default function Music() {
                 </div>
                 {!track.audioUrl && <span className="text-xs text-gray-400 italic hidden sm:block">No audio</span>}
                 <span className="text-[#64748b] text-sm hidden sm:block">{track.duration}</span>
-                <button className="text-[#64748b] hover:text-[#0d9488] transition-colors disabled:opacity-30"
-                  disabled={!track.audioUrl}
-                  onClick={(e) => { e.stopPropagation(); handleDownload(track); }}>
-                  <Download size={18} />
-                </button>
+                {isSpotifyUrl(track.audioUrl) ? (
+                  <a href={track.audioUrl} target="_blank" rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="text-[#1DB954] hover:text-[#1DB954]/80 transition-colors" title="Open on Spotify">
+                    <ExternalLink size={18} />
+                  </a>
+                ) : (
+                  <button className="text-[#64748b] hover:text-[#0d9488] transition-colors disabled:opacity-30"
+                    disabled={!track.audioUrl}
+                    onClick={(e) => { e.stopPropagation(); handleDownload(track); }}>
+                    <Download size={18} />
+                  </button>
+                )}
               </div>
             ))}
           </div>
@@ -417,6 +447,32 @@ export default function Music() {
       )}
 
       <Footer />
+
+      {/* ── Spotify Embed Modal ──────────────────────────────────────────────── */}
+      {spotifyModal && (
+        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4" onClick={() => setSpotifyModal(null)}>
+          <div className="bg-white rounded-2xl overflow-hidden w-full max-w-md shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+              <div>
+                <p className="text-xs text-[#64748b] mb-0.5">Now Playing</p>
+                <h3 className="font-bold text-[#0f172a] text-sm">{spotifyModal.title}</h3>
+              </div>
+              <button onClick={() => setSpotifyModal(null)} className="text-[#64748b] hover:text-[#0f172a] transition-colors">
+                <X size={20} />
+              </button>
+            </div>
+            <iframe
+              src={getSpotifyEmbedUrl(spotifyModal.url)!}
+              width="100%"
+              height="352"
+              frameBorder="0"
+              allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+              loading="lazy"
+              title={spotifyModal.title}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
