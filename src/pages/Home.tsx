@@ -3,7 +3,7 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import DonateModal from '../components/DonateModal';
 import { Link } from 'react-router';
-import { Play, Pause, SkipForward, SkipBack, Music, Images, Calendar, ArrowRight, Heart, Phone, Send, Mail, MapPin, Briefcase, Download, Youtube } from 'lucide-react';
+import { Play, Pause, SkipForward, SkipBack, Music, Images, Calendar, ArrowRight, Heart, Phone, Send, Mail, MapPin, Briefcase, Download, Youtube, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { api } from '../lib/api';
 import { useSiteContent } from '../context/SiteContentContext';
@@ -36,6 +36,7 @@ export default function Home() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [contactSending, setContactSending] = useState(false);
   const [donateOpen, setDonateOpen] = useState(false);
+  const [spotifyModal, setSpotifyModal] = useState<{ url: string; title: string } | null>(null);
 
   const tracksRef = useRef<HomeTrack[]>([]);
   useEffect(() => { tracksRef.current = musicTracks; }, [musicTracks]);
@@ -98,6 +99,12 @@ export default function Home() {
   };
 
   const handleDownload = (track: HomeTrack) => downloadTrack(track.audioUrl, track.title);
+
+  const getSpotifyEmbedUrl = (url: string): string | null => {
+    const match = url.match(/spotify\.com\/track\/([a-zA-Z0-9]+)/);
+    if (!match) return null;
+    return `https://open.spotify.com/embed/track/${match[1]}?utm_source=generator&theme=0`;
+  };
 
   const handleContactSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -255,10 +262,11 @@ export default function Home() {
                   <h3 className="text-xl font-bold text-[#0f172a] mb-2">{track.title}</h3>
                   <div className="flex gap-3">
                     {track.audioUrl && track.audioUrl.includes('spotify.com/track/') ? (
-                      <a href={track.audioUrl} target="_blank" rel="noopener noreferrer"
+                      <button
+                        onClick={() => setSpotifyModal({ url: track.audioUrl, title: track.title })}
                         className="flex-1 bg-[#1DB954] text-white py-2.5 rounded-xl font-semibold text-sm hover:bg-[#1aa34a] transition-colors flex items-center justify-center gap-1">
-                        <Play size={14} /> Listen on Spotify
-                      </a>
+                        <Play size={14} /> Listen
+                      </button>
                     ) : (
                       <button
                         onClick={() => { setCurrentTrack(index); setIsPlaying(currentTrack === index ? !isPlaying : true); }}
@@ -496,6 +504,31 @@ export default function Home() {
 
       <Footer />
       {donateOpen && <DonateModal onClose={() => setDonateOpen(false)} />}
+
+      {spotifyModal && (
+        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4" onClick={() => setSpotifyModal(null)}>
+          <div className="bg-white rounded-2xl overflow-hidden w-full max-w-md shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+              <div>
+                <p className="text-xs text-[#64748b] mb-0.5">Now Playing</p>
+                <h3 className="font-bold text-[#0f172a] text-sm">{spotifyModal.title}</h3>
+              </div>
+              <button onClick={() => setSpotifyModal(null)} className="text-[#64748b] hover:text-[#0f172a] transition-colors">
+                <X size={20} />
+              </button>
+            </div>
+            <iframe
+              src={getSpotifyEmbedUrl(spotifyModal.url)!}
+              width="100%"
+              height="352"
+              frameBorder="0"
+              allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+              loading="lazy"
+              title={spotifyModal.title}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
